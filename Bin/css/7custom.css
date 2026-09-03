@@ -520,6 +520,12 @@ hr {
      width:100%;
      height:100%;
  }
+ 
+ #login-dark {    
+    background-color: #222;
+    width:100%;
+     height:100%;
+}
 
 .mrg-bottom{
     margin-bottom: 10px;

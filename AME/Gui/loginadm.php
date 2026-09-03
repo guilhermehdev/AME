@@ -14,7 +14,7 @@ echo "</head>
       <body>";
   
 
-        echo "<div id=\"login-light\" class=\"container\">
+        echo "<div id=\"login-dark\" class=\"container\">
 
             <div class=\"login-form\">        
 
@@ -35,18 +35,20 @@ echo "</head>
                     <div class=\"center-block\" style=\"width:250px;\">                
                         <form id=\"frm-login\" method=\"POST\" action=\"" . URL . "Loginadm/auth\">
                                                                                   
-                            <label>Usuário</label>
+                            <label class=\"text-white\">Usuário</label>
                         {$f->select(Daoagendas ::slctUser(), "select mrg-bottom", "slct-user-login", "slct-user-login", "\"id\":\"slct-prof\"", "id", "nome", "", null, "", "","",true,"Selecione o Profissional")}
 
-                            <label>Senha</label>
+                            <label class=\"text-white\">Senha</label>
                             <div class=\"input-group\">
                                 <input type=\"password\" name=\"pass\" id=\"pass\" class=\"form-control\" placeholder=\"Senha\" aria-label=\"\"  data-rule-required=\"true\" data-msg-required=\"Digite sua senha!\" data-popover-offset=\"10,60\">
                                 <span class=\"input-group-btn\">
                                   <button id=\"btn-submit\" type=\"\" class=\"btn btn-primary submit\">OK</button>
                                 </span>
-                            </div>                       
+                            </div>     
                         </form>                   
-
+                                                    
+                           <a href=\"recuperar\"  id=\"btn-recuperar-senha\" name=\"btn-recuperar-senha\" class=\"\" data-params='{\"id\":\"slct-user-login\"}' data-redirect=\"\"> Recuperar senha</a>          
+                           
                     </div>
                 </div>
 

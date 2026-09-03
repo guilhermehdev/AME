@@ -68,6 +68,10 @@ class Daouser {
         }        
     } 
     
+    public function recoverPass(){
+        
+    }
+    
     public static function delete($id) {                  
         $sql = "DELETE FROM usuarios WHERE id=:ID";            
         return (Maincontroller::doQuery($sql,array('ID'=>$id),null,"Usuário não pode ser excluído, possui registros associados a ele (retornos).")) ;     

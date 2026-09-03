@@ -1401,6 +1401,23 @@ $(document).on('click', '.btn-update-obs', function () {
   });
 });
 
+$(document).on('click', '#btn-recuperar-senha', function (e) {
+    e.preventDefault();
+
+    var idUser = $('[name=slct-user-login]').val();
+
+    if (!idUser) {
+        callModal(
+            null, 'advice-dialog', 'Atenção', 5, 0,
+            '<h5 class="text-muted">Selecione um profissional antes de continuar!</h5>',
+            '', false, ''
+        );
+        return;
+    }
+
+    window.location.href =  'recuperar/' + idUser;
+});
+
 //-----------MASCARAS---------------------------------------//
 
 $(document).on('input', '.data-br', function () {

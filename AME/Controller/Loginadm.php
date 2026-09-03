@@ -55,5 +55,13 @@ class Loginadm {
             Functions::messages("msg",'Usuário não encontrado',"danger");
         } 
                        
-    }   
+    }  
+    
+    public function recuperar($param){                     
+        $id = $param[2];
+        $v = new TGui('recuperar_senha');    
+        $v->addData("idUser", $id);
+        $v->renderize(APP_VIEW);          
+          
+    }
 }

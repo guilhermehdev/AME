@@ -2041,4 +2041,5 @@ function CartaoSus() {
   // });   
   
    window.open('http://' + window.location.hostname + ':8080/sus?cpf=' + encodeURIComponent(cpf) + '&sexo=' + encodeURIComponent(Inpsexo), '_blank');
+      
 }
