@@ -58,10 +58,10 @@ class Loginadm {
     }  
     
     public function recuperar($param){                     
-        $id = $param[2];
+        $id = $param[2];        
+        $userData = Daouser::get(null,null,$id);           
         $v = new TGui('recuperar_senha');    
-        $v->addData("idUser", $id);
-        $v->renderize(APP_VIEW);          
-          
+        $v->addData("userData", $userData);
+        $v->renderize(APP_VIEW);                    
     }
 }

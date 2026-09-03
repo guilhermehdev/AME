@@ -1401,9 +1401,7 @@ $(document).on('click', '.btn-update-obs', function () {
   });
 });
 
-$(document).on('click', '#btn-recuperar-senha', function (e) {
-    e.preventDefault();
-
+$(document).on('click', '#btn-recuperar-senha', function (e) {  
     var idUser = $('[name=slct-user-login]').val();
 
     if (!idUser) {
@@ -1413,9 +1411,7 @@ $(document).on('click', '#btn-recuperar-senha', function (e) {
             '', false, ''
         );
         return;
-    }
-
-    window.location.href =  'recuperar/' + idUser;
+    }    
 });
 
 //-----------MASCARAS---------------------------------------//

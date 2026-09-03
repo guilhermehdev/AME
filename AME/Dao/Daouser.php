@@ -14,13 +14,16 @@ class Daouser {
         return $user ;
     }
     
-    public static function get($cpf=null,$name=null) {
+    public static function get($cpf=null,$name=null,$id=null) {
        
         if($cpf != "null") {
             $where = " WHERE CPF='{$cpf}'";
         } 
         if($name != "null") {
             $where = " WHERE nome LIKE '{$name}%'";
+        }
+           if($id != "null") {
+            $where = " WHERE id ={$id}";
         }
                 
         $sql = "SELECT id, nome, CPF, pass, cadastros FROM usuarios {$where} ORDER BY nome";
