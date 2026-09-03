@@ -1,0 +1,357 @@
+
+#appIcon {
+    margin-top:-7px;
+}
+
+body-dark {    
+    background-color: #353535;
+}
+
+body {    
+    background-color: #e4e4e4;
+}
+
+.btn-sm {
+    padding: 5px 5px;
+    font-size: 8px;
+    line-height: 1;
+    border-radius: 3px;
+}
+
+.input-group .form-control {
+    background-color: #FFF;
+    color: #555; 
+}
+
+.input-group .form-control-dark {
+    background-color: #222;
+    color: #eb9316;
+    border-color: #222;
+}
+
+.hidden {
+    display: none;
+}
+
+.navbar {    
+    min-height: 60px;
+    margin-bottom:0px;
+}
+
+.navbar-default {
+    background-image: linear-gradient(to bottom,#333333 0,#222 100%);
+    border-top: 0; 
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid #222;
+    border-radius: 0;
+}
+
+.affix ~ .container-fluid {   
+    top: 70px;
+}
+
+.page-header {
+    color: #333;
+    /*border-bottom: 1px solid #ac2925;*/
+    border: none;
+}
+
+@media screen and (min-width: 775px) {
+    .sidebar {
+        position: fixed !important;
+        top: 60px !important;
+    }
+    .collapse.in.width {
+        width: 17%;       
+    }    
+} 
+
+@media screen and (min-width: 775px) and (max-width: 1024px) {
+    .panel-title {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-size: 12px;       
+    }
+    .btn {
+        font-size: 8px;
+    }
+}
+/*
+@media screen and (min-width: 1023px) {
+    
+}*/
+
+/*@media screen and (max-width: 1295px) {
+    .diminish {
+       font-size:10px;
+       margin: 0;
+       padding: 0;
+    }
+    .form-horizontal {
+       margin-top: 23px;  
+    }    
+}*/
+
+/*@media screen and (min-width: 1295px) {
+    .diminish {
+       font-size:14px;            
+    }
+    .form-horizontal {
+       margin-top: 23px;  
+    }
+}*/
+
+.sidebar {
+    padding-left: 0;
+    padding-right: 0;
+    width: auto;
+    top: 0;
+    bottom: 0;
+    position: relative;
+    left: 0;
+    z-index: 1000;
+    padding: 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: #666;
+    /* border-right: 1px solid #8FBC8F; */
+    background-color: #222;
+}
+
+#sidebar-menu {
+    color: #fff;
+    background-color: #ac2925; 
+}
+
+.less-padding {
+    padding: 2px 4px !important;
+}
+
+.panel-default {
+    border-color: maroon;
+}
+
+.panel-patrimonio {
+    border-color: #ccc;
+}
+
+.white {
+    background-color: #fff;
+    /*border: 1px solid #f2f2f2;*/
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.bg-black {
+    background-image: linear-gradient(to bottom,#db0000 0,#ac2925 100%); 
+    color:#fff;
+    border: 1px solid #db0000;
+    border-top-left-radius: 6px;
+}
+
+.yellow-bkg {
+    background-color: #fffff1 !important;
+}
+
+fieldset.for-panel legend-dark {
+/*    border: 0px solid #ddd;
+    border-radius: 5px;*/
+    color: #07ED89;
+    font-size: 22px;
+    /* font-weight: bold; */
+/*    line-height: 10px;
+    margin: inherit;
+    padding: 9px;
+    width: auto;
+    background-color: #fff;
+    margin-bottom: 0;*/
+}
+
+fieldset.for-panel legend {
+/*    border: 0px solid #ddd;
+    border-radius: 5px;*/
+    color: #004a9b;
+    font-size: 18px;
+    font-style: italic;
+    /* font-weight: bold; */
+/*    line-height: 10px;
+    margin: inherit;
+    padding: 9px;
+    width: auto;
+    background-color: #fff;
+    margin-bottom: 0;*/
+}
+
+.font14 {
+    font-size: 14px;
+}
+
+.modal-footer {    
+    border-top: none;
+}
+
+.label-default {
+    background-color: #ccc;
+}
+
+.label-orange {
+    background-color: #F4A460;
+}
+
+label-dark {
+    margin-top: 10px;
+    color: #fff;
+}
+
+#resultados {
+    max-width: 90vw;
+    width: max-content;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1050; 
+}
+#resultados table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* cabeçalho */
+#resultados th {   
+  background: linear-gradient(to bottom,#f0ad4e 0,#eb9316 100%);
+  font-size: 12px;
+  color: #fff; 
+  text-align: left;
+  padding: 8px;
+  border-bottom: 0px solid #004a9b;
+}
+
+/* células */
+#resultados td {
+  padding: 6px 8px;
+  border-top: 1px solid #e5e5e5;
+  color: #333;
+  font-size: 11px;
+  background-color: #e5e5e5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* hover */
+#resultados tr:hover { 
+  cursor: pointer;
+}
+
+#resultados table tbody tr:hover > td { background-color: #666 !important; color:#fff;}
+
+/*bairro*/
+
+#resultados-bairro {
+    max-width: 90vw;
+    width: max-content;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1050; 
+}
+#resultados-bairro table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* cabeçalho */
+#resultados-bairro th {   
+  background: linear-gradient(to bottom,#f0ad4e 0,#eb9316 100%);
+  font-size: 12px;
+  color: #fff; 
+  text-align: left;
+  padding: 8px;
+  border-bottom: 0px solid #004a9b;
+}
+
+/* células */
+#resultados-bairro td {
+  padding: 6px 8px;
+  border-top: 1px solid #e5e5e5;
+  color: #333;
+  font-size: 11px;
+  background-color: #e5e5e5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* hover */
+#resultados-bairro tr:hover { 
+  cursor: pointer;
+}
+
+#resultados-bairro table tbody tr:hover > td { background-color: #666 !important; color:#fff;}
+
+#inp-tipo-log{
+    pointer-events: none; /* trava o clique */
+}
+
+.small
+ {
+     color: #ccc;
+ }
+ 
+ .small-button{
+     width: 15px;
+     height: 20px;
+     font-size: 12px;
+ }
+ 
+ .table-procedimentos-secundarios, 
+ .table-fila-oci{
+    border-collapse: collapse;
+    width: 100%; 
+    font-size: 14px;
+    text-align:left;    
+    background: #F5F5F5;
+ }
+ 
+ .table-procedimentos-secundarios, 
+ .table-fila-oci thead {
+    border: 1px solid #ccc;
+}
+ 
+ .table-procedimentos-secundarios thead tr th{    
+     background-color: #eb9316; 
+     font-size: 12px;
+     color: #fff;    
+     padding: 4px; 
+ }
+ 
+ .table-fila-oci thead tr th{    
+     background-color: #029ef3; 
+     font-size: 14px;
+     color: #fff;    
+     padding: 4px; 
+ }
+ 
+ .table-procedimentos-secundarios, 
+ .table-fila-oci td{
+    border: 1px solid #ccc;   
+    padding: 4px; 
+ }
