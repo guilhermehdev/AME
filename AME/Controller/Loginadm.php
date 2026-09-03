@@ -5,13 +5,21 @@
  *
  * @author Guilherme
  */
-class Loginadm { 
-    
-    public function login() {
+class Loginadm {
+
+    /**
+     * @throws Exception
+     */
+    public function login(): void
+    {
         session_start();
         session_destroy();
-        $v = new TGui('loginadm');       
-        $v->renderize(GUI_PATH,true); 
+        $v = new TGui('loginadm');
+        try {
+            $v->renderize(GUI_PATH, true);
+        } catch (Exception $e) {
+
+        }
     }
     
     public function logoutadm($param) {               

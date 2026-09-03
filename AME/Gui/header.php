@@ -69,5 +69,5 @@ echo
                 {$ac->menuAdm()}              
                 
             </div>
-        
+        </div>
             <div class=\"container-fluid col-md-offset-2\" id=\"main\" name=\"main\">";                

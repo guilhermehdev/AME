@@ -47,7 +47,7 @@ echo "</head>
                             </div>     
                         </form>                   
                                                     
-                           <button href=\"".URL."Loginadm/recuperar\"  id=\"btn-recuperar-senha\" name=\"btn-recuperar-senha\" class=\"btn btn-primary call-data\" data-params='{\"id\":\"slct-user-login\"}' data-redirect=\"load\" data-redirect-target=\"main\"> Recuperar senha</button>          
+                           <button href=\"Loginadm/recuperar\"  id=\"btn-recuperar-senha\" name=\"btn-recuperar-senha\" class=\"btn btn-primary\"> Recuperar senha</button>
                            
                     </div>
                 </div>

@@ -218,7 +218,7 @@ class AppController implements IPrivateTO {
                         </div>
                     </div>      
                     
-                </div>      
+                   
               </div>";
        
           }
