@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Description of Config class
+ * Configurações gerais do sistema
  *
  * @author Guilherme
  */
