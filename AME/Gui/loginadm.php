@@ -47,7 +47,7 @@ echo "</head>
                             </div>     
                         </form>                   
                                                     
-                           <button href=\"Loginadm/recuperar\"  id=\"btn-recuperar-senha\" name=\"btn-recuperar-senha\" class=\"btn btn-primary\"> Recuperar senha</button>
+                           <a href=\"Loginadm/recuperar\"  id=\"btn-recuperar-senha\" name=\"btn-recuperar-senha\" class=\"\"> Recuperar senha</a>
                            
                     </div>
                 </div>
