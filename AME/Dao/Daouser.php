@@ -26,7 +26,7 @@ class Daouser {
             $where = " WHERE id ={$id}";
         }
                 
-        $sql = "SELECT id, nome, CPF, pass, cadastros FROM usuarios {$where} ORDER BY nome";
+        $sql = "SELECT * FROM usuarios {$where} ORDER BY nome";
         $ds = Maincontroller::doQuery($sql);
                        
         $arr = array();        

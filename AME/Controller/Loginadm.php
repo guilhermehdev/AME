@@ -67,8 +67,11 @@ class Loginadm {
     
     public function recuperar($param){                     
         $id = $param[2];        
-        $userData = Daouser::get(null,null,$id);           
+        $userData = Daouser::get(null,null,$id);        
+        $provisoria = $userData[0]['senha_provisoria'];    
+        
         $v = new TGui('recuperar_senha');    
+        $v->addData("senhaProvisoria", $provisoria);
         $v->addData("userData", $userData);
         $v->renderize(APP_VIEW);                    
     }
