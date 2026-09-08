@@ -22,7 +22,7 @@ echo
         . "</tr>
         <tr>"        
             . "<td class=\"text-nowrap\">
-                    <button class=\"btn btn-primary\" name=\"btn-select-usuario\" id=\"btn-select-usuario-{$u['id']}\" data-id=\"{$u['id']}\" data-params='{\"nome\":\"{$u['nome']}\",\"cpf\":\"{$u['CPF']}\",\"cad\":\"{$u['cadastros']}\",\"pass\":\"{$u['pass']}\"}' data-modal-close=\"true\">
+                    <button class=\"btn btn-primary\" name=\"btn-select-usuario\" id=\"btn-select-usuario-{$u['id']}\" data-id=\"{$u['id']}\" data-params='{\"nome\":\"{$u['nome']}\",\"cpf\":\"{$u['CPF']}\",\"cad\":\"{$u['cadastros']}\",\"pass\":\"{$u['pass']}\",\"email\":\"{$u['email']}\"}' data-modal-close=\"true\">
                 <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span>
                     </button>
                </td>"

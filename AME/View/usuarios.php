@@ -36,6 +36,11 @@ echo
                             </span>
                         </div>
                 </div>	
+
+                <div class=\"col-sm-12\">
+                    <label>Email</label><br>
+                        {$f->input("email", "form-control", "inp-email-usuario", "inp-email-usuario", "", "Email", "", "Digite o Email")}
+                </div>	
                 
                  <div class=\"col-sm-12\">
                     <label>Acesso a cadastros</label><br>                      
@@ -73,9 +78,9 @@ echo
               
                   
                 <div class=\"col-sm-12\">
-                    <button type=\"button\" id=\"btn-submit-usuario\" class=\"btn btn-success mrg-top\" href=\"Daouser/save\" data-params='{\"nome\":\"inp-nome-usuario\",\"cpf\":\"inp-cpf-usuario\",\"pass\":\"inp-pass-usuario\",\"cad\":\"inp-cadastro-usuario\"}'>Salvar </button>
+                    <button type=\"button\" id=\"btn-submit-usuario\" class=\"btn btn-success mrg-top\" href=\"Daouser/save\" data-params='{\"nome\":\"inp-nome-usuario\",\"cpf\":\"inp-cpf-usuario\",\"pass\":\"inp-pass-usuario\",\"cad\":\"inp-cadastro-usuario\",\"email\":\"inp-email-usuario\"}'>Salvar </button>
 
-                    <button type=\"button\" id=\"btn-update-usuario\" class=\"btn btn-warning mrg-top\" href=\"Daouser/update\" data-params='{\"id\":\"inp-id\",\"nome\":\"inp-nome-usuario\",\"cpf\":\"inp-cpf-usuario\",\"pass\":\"inp-pass-usuario\",\"cad\":\"inp-cadastro-usuario\"}' style=\"display:none;\">Atualizar </button>
+                    <button type=\"button\" id=\"btn-update-usuario\" class=\"btn btn-warning mrg-top\" href=\"Daouser/update\" data-params='{\"id\":\"inp-id\",\"nome\":\"inp-nome-usuario\",\"cpf\":\"inp-cpf-usuario\",\"pass\":\"inp-pass-usuario\",\"cad\":\"inp-cadastro-usuario\",\"email\":\"inp-email-usuario\"}' style=\"display:none;\">Atualizar </button>
 
                     <button type=\"button\" class=\"btn btn-danger hidden call-modal mrg-top\" id=\"btn-delete-usuario\" name=\"btn-delete-usuario\" data-modal-params='{\"id\":\"inp-id\"}' data-modal-title=\"Atenção\" data-modal-confirm=\"true\" data-modal-question=\"Excluir Usuário?\"  data-modal-type=\"5\" data-modal-cls=\"advice-dialog\" data-modal-href=\"Servidores/delete\" data-redirect=\"\" data-modal-redirect-url=\"\" data-modal-redirect-params='{}' data-redirect-target=\"\" data-modal-close=\"true\">Excluir</button>
 

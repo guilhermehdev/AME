@@ -1254,6 +1254,7 @@ $(document).on('click', '#btn-submit-usuario, #btn-update-usuario', function () 
             $('#inp-id').val('');
             $('#inp-nome-usuario').val('');
             $('#inp-cpf-usuario').val('');
+            $('#inp-email-usuario').val('');
             $('#inp-pass-usuario').val('');
             $('#inp-pass2-usuario').val('');
             $('#inp-cadastro-usuario').prop('checked', false);
@@ -1432,6 +1433,7 @@ $(document).on('click', '[name=btn-select-usuario]', function () {
     $('#inp-id').val(id);
     $('#inp-nome-usuario').val(params['nome']);
     $('#inp-cpf-usuario').val(params['cpf']);
+    $('#inp-email-usuario').val(params['email']);
     if (params['cad'] == 1) {
         $('#inp-cadastro-usuario').prop('checked', true);
     } else {
@@ -1466,6 +1468,7 @@ $(document).on('click', '#btn-cancel-update, #btn-cancel-update-servidor, #btn-c
 
     $('#inp-nome-usuario').val('');
     $('#inp-cpf-usuario').val('');
+    $('#inp-email-usuario').val('');
     $('#inp-pass-usuario').val('');
     $('#inp-pass2-usuario').val('');
     $('#inp-cadastro-usuario').prop('checked', false);

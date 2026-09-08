@@ -75,4 +75,86 @@ class Loginadm {
         $v->addData("userData", $userData);
         $v->renderize(APP_VIEW);                    
     }
+
+    public function atualizarSenha() {
+        $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+
+        $id = $post['inp-id-user'];
+        $senhaProvisoria = $post['inp-senha-provisoria'];
+        $novaSenha = $post['inp-senha-nova'];
+        $confirmaSenha = $post['inp-senha-nova-confirma'];
+
+        if ($novaSenha !== $confirmaSenha) {
+            Functions::messages("msg", "As senhas informadas não coincidem.", "danger");
+            return;
+        }
+
+        $res = Daouser::recoverPass($id, $senhaProvisoria, $novaSenha);
+
+        if ($res) {
+            Functions::messages("header", URL . "Loginadm/login");
+        } else {
+            Functions::messages("msg", "Senha provisória inválida.", "danger");
+        }
+    }
+
+    public function solicitarLink() {
+        $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+        $cpf = Functions::cleanString($post['inp-cpf-user']);
+        $email = $post['inp-email-user'];
+
+        $res = Daouser::gerarTokenRecuperacao($cpf, $email);
+
+        if (!$res) {
+            Functions::messages("msg", "CPF ou e-mail não encontrados.", "danger");
+            return;
+        }
+
+        $link = URL . "Loginadm/redefinir/" . $res['token'];
+        $corpo = "<p>Você solicitou a redefinição de senha no sistema AME - Peruíbe.</p>"
+               . "<p><a href=\"{$link}\">Clique aqui para definir uma nova senha</a></p>"
+               . "<p>Este link expira em 2 horas. Se você não fez essa solicitação, ignore este e-mail.</p>";
+
+        $enviado = Mailer::send($res['email'], "Recuperação de senha - AME", $corpo);
+
+        if ($enviado) {
+            Functions::messages("msg", "Enviamos um link de recuperação para o seu e-mail.", "success");
+        } else {
+            Functions::messages("msg", "Não foi possível enviar o e-mail. Tente novamente mais tarde.", "danger");
+        }
+    }
+
+    public function redefinir($param) {
+        $token = $param[2];
+        $id = Daouser::validarToken($token);
+
+        if (!$id) {
+            header("location: " . URL . "Loginadm/login");
+            return;
+        }
+
+        $v = new TGui('redefinir_senha');
+        $v->addData("token", $token);
+        $v->renderize(APP_VIEW);
+    }
+
+    public function atualizarSenhaToken() {
+        $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+        $token = $post['inp-token'];
+        $novaSenha = $post['inp-senha-nova'];
+        $confirmaSenha = $post['inp-senha-nova-confirma'];
+
+        if ($novaSenha !== $confirmaSenha) {
+            Functions::messages("msg", "As senhas informadas não coincidem.", "danger");
+            return;
+        }
+
+        $res = Daouser::redefinirSenhaPorToken($token, $novaSenha);
+
+        if ($res) {
+            Functions::messages("header", URL . "Loginadm/login");
+        } else {
+            Functions::messages("msg", "Link inválido ou expirado.", "danger");
+        }
+    }
 }

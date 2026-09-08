@@ -40,7 +40,16 @@ class Config {
         'PASSWORD' => "Ame*12345",
 	    
         'DEFAULT_CONTROLLER' => "AppController",
-        'DEFAULT_METHOD' => "index"                  
+        'DEFAULT_METHOD' => "index",
+
+        // Configurações de envio de e-mail (preencher com as credenciais reais)
+        'SMTP_HOST' => "smtp.gmail.com",
+        'SMTP_PORT' => 587,
+        'SMTP_SECURE' => "tls",
+        'SMTP_USER' => "",
+        'SMTP_PASS' => "",
+        'MAIL_FROM' => "",
+        'MAIL_FROM_NAME' => "AME - Peruíbe"
                          
         ); 
     }
