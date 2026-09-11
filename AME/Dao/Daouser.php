@@ -42,6 +42,7 @@ class Daouser {
         $cpf = Functions::cleanString($params[3]);
         $pass = Functions::cleanString($params[4]); 
         $email = isset($params[6]) ? Functions::removeQuotes($params[6]) : null;
+        $nasc = isset($params[7]) ? Functions::removeQuotes($params[7]) : null;
                       
         if ($params[5] == "true"){
             $cad = 1; 
@@ -49,8 +50,8 @@ class Daouser {
             $cad = 0; 
         }       
         
-        $sql = "INSERT INTO usuarios (nome, CPF, pass, cadastros, ativo, retornos, notificacao, impressos, email) VALUES (:NOME,:CPF,:PASS,:CAD,:ATIVO,:RET,:NOT,:IMP,:EMAIL)";            
-        if(Maincontroller::doQuery($sql,array('NOME'=>$nome,'CPF'=>$cpf,'PASS'=>$pass,'CAD'=>$cad,'ATIVO'=>'1','RET'=>'1','NOT'=>'1','IMP'=>'1','EMAIL'=>$email))){
+        $sql = "INSERT INTO usuarios (nome, CPF, pass, cadastros, ativo, retornos, notificacao, impressos, email, dtnasc) VALUES (:NOME,:CPF,:PASS,:CAD,:ATIVO,:RET,:NOT,:IMP,:EMAIL,:NASC)";            
+        if(Maincontroller::doQuery($sql,array('NOME'=>$nome,'CPF'=>$cpf,'PASS'=>$pass,'CAD'=>$cad,'ATIVO'=>'1','RET'=>'1','NOT'=>'1','IMP'=>'1','EMAIL'=>$email,'NASC'=>$nasc))){
            
         }        
     }     
@@ -61,6 +62,7 @@ class Daouser {
         $cpf = Functions::cleanString($params[4]);
         $pass = $params[5];
         $email = isset($params[7]) ? Functions::removeQuotes($params[7]) : null;
+        $nasc = isset($params[8]) ? Functions::removeQuotes($params[8]) : null;
         
         if ($params[6] == "true"){
             $cad = 1; 
@@ -68,8 +70,8 @@ class Daouser {
             $cad = 0; 
         }
                
-        $sql = "UPDATE usuarios SET nome=:NOME, CPF=:CPF, pass=:PASS, cadastros=:CAD, email=:EMAIL WHERE id=:ID";            
-        if(Maincontroller::doQuery($sql,array('NOME'=>$nome,'CPF'=>$cpf,'PASS'=>$pass,'CAD'=>$cad,'EMAIL'=>$email,'ID'=>$id))){
+        $sql = "UPDATE usuarios SET nome=:NOME, CPF=:CPF, pass=:PASS, cadastros=:CAD, email=:EMAIL, dtnasc=:NASC WHERE id=:ID";            
+        if(Maincontroller::doQuery($sql,array('NOME'=>$nome,'CPF'=>$cpf,'PASS'=>$pass,'CAD'=>$cad,'EMAIL'=>$email,'ID'=>$id,'NASC'=>$nasc))){
             
         }        
     } 

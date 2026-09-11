@@ -7,26 +7,20 @@
 class Daopatrimonio {
     
     public static function slctSalas($id) {
-        $mc = new Maincontroller(); 
-                        
-        $salas = $mc->doSelect("id", "descricao", "salas", "WHERE id_unidade={$id[2]}", "ORDER BY numero");
-                        
+        $mc = new Maincontroller();                         
+        $salas = $mc->doSelect("id", "descricao", "salas", "WHERE id_unidade={$id[2]}", "ORDER BY numero");                        
         echo $salas; 
     }
     
     public static function slctItens() {
-        $mc = new Maincontroller();
-        
-        $itens = $mc->doSelect("id", "descricao", "itens", "", "ORDER BY descricao");
-       
+        $mc = new Maincontroller();        
+        $itens = $mc->doSelect("id", "descricao", "itens", "", "ORDER BY descricao");       
         return $itens; 
     }
     
-    public static function getUnidades($idUnidade) {
-       
+    public static function getUnidades($idUnidade) {       
         $sql = "SELECT id,descricao FROM unidades WHERE id=:IDUNIDADE";
-        $ds = Maincontroller::doQuery($sql, array('IDUNIDADE'=>$idUnidade));
-        
+        $ds = Maincontroller::doQuery($sql, array('IDUNIDADE'=>$idUnidade));        
         $arr = array();        
         while($rows = $ds->fetch(PDO::FETCH_ASSOC)){
             $arr[] = $rows;

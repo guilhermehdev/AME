@@ -110,16 +110,16 @@ class Daopacientes {
     
     public static function get($id=null,$nasc=null,$name=null,$cpf=null) {
                     
-        if($id != "null"){
+        if($id != null && $id != "null"){
             $where = "WHERE pacientes.id={$id}";
         } 
-        if($nasc != "null") {
+        if($nasc != null && $nasc != "null") {
             $where = "WHERE pacientes.dtnasc='{$nasc}'";
         } 
-        if($name != "null") {
+        if($name != null && $name != "null") {
             $where = "WHERE pacientes.nome LIKE '{$name}%'";
         }
-        if($cpf != "null") {
+        if($cpf != null && $cpf != "null") {
             $where = "WHERE pacientes.cpf='{$cpf}'";
         }
                 

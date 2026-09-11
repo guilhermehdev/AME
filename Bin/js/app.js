@@ -1231,6 +1231,10 @@ $(document).on('click', '#btn-submit-usuario, #btn-update-usuario', function () 
     } else if ($('#inp-cpf-usuario').val().length < 11) {
         messagesHandler('{"action":"modal","content":"Verificar campo <strong>CPF </strong><br>Não pode ser vazio.","typemsg":"danger"}');
         return;
+        
+    } else if ($('#inp-nasc-usuario').val().length < 11) {
+        messagesHandler('{"action":"modal","content":"Verificar campo <strong>Nascimento </strong><br>Não pode ser vazio.","typemsg":"danger"}');
+        return;
 
     } else if ($('#inp-pass-usuario').val().length < 6 || $('#inp-pass2-usuario').val().length < 6) {
         messagesHandler('{"action":"modal","content":"Verificar campo <strong>Senha </strong><br>Não pode ser vazio ou conter menos de 6 caracteres.","typemsg":"danger"}');
@@ -1254,6 +1258,7 @@ $(document).on('click', '#btn-submit-usuario, #btn-update-usuario', function () 
             $('#inp-id').val('');
             $('#inp-nome-usuario').val('');
             $('#inp-cpf-usuario').val('');
+            $('#inp-nasc-usuario').val('');
             $('#inp-email-usuario').val('');
             $('#inp-pass-usuario').val('');
             $('#inp-pass2-usuario').val('');
@@ -1433,6 +1438,7 @@ $(document).on('click', '[name=btn-select-usuario]', function () {
     $('#inp-id').val(id);
     $('#inp-nome-usuario').val(params['nome']);
     $('#inp-cpf-usuario').val(params['cpf']);
+    $('#inp-nasc-usuario').val(validateData(params['nasc'],'EN','BR'));
     $('#inp-email-usuario').val(params['email']);
     if (params['cad'] == 1) {
         $('#inp-cadastro-usuario').prop('checked', true);
@@ -2048,52 +2054,95 @@ function CartaoSus() {
 }
 
 //Gestao Agendas//
-
 $(function () {
-
-    // Preenche os hidden fields com os valores dos selects da tela principal
-    // (os selects ficam na gestao_agenda.php, fora desta partial)
+//
+//    // Preenche os hidden fields com os valores dos selects da tela principal
+//    // (os selects ficam na gestao_agenda.php, fora desta partial)
     $('#inp-id-espec').val($('#slct-espec-reg').val());
     $('#inp-id-servidor').val($('#slct-servidor-reg').val() || '');
     $('#inp-mes').val($('#slct-mes-reg').val());
     $('#inp-ano').val($('#slct-ano-reg').val());
-
-    // Preview de faltas em tempo real
+//
+//    // Preview de faltas em tempo real
     function atualizarFaltas() {
-        var ame  = parseInt($('#inp-vagas-ame').val())  || 0;
-        var reg  = parseInt($('#inp-vagas-reg').val())  || 0;
-        var pres = parseInt($('#inp-presentes').val())  || 0;
-        var faltas = Math.max(0, (ame + reg) - pres);
-        $('#inp-faltas-preview').val(faltas);
+        var ame = parseInt($('#inp-vagas-ame').val(), 10) || 0;
+        var reg = parseInt($('#inp-vagas-reg').val(), 10) || 0;
+        var pres = parseInt($('#inp-presentes').val(), 10) || 0;
+        $('#inp-faltas-preview').val(Math.max(0, (ame + reg) - pres));
     }
-    $('#inp-vagas-ame, #inp-vagas-reg, #inp-presentes').on('input', atualizarFaltas);
-
-    // Mostra/oculta campo de reagendamento conforme tipo
-    $('#inp-tipo-evento').on('change', function () {
-        if ($(this).val() === 'REAGENDAMENTO' || $(this).val() === 'AUSENCIA') {
-            $('#container-reagend').show();
-        } else {
-            $('#container-reagend').hide();
-            $('#inp-dt-reagend').val('');
-        }
+    $(document).on('input', '#inp-vagas-ame, #inp-vagas-reg, #inp-presentes', atualizarFaltas);
+//
+//    // Mostra/oculta campo de reagendamento conforme tipo
+    $(document).on('change', '#inp-tipo-evento', function () {
+        var exibe = $(this).val() === 'REAGENDAMENTO' || $(this).val() === 'AUSENCIA';
+        $('#container-reagend').toggle(exibe);
+        if (!exibe) $('#inp-dt-reagend').val('');
     });
-
-    // Mostrar/ocultar formulário de novo evento
-    $('#btn-novo-evento').on('click', function () {
+//
+//    // Mostrar/ocultar formulário de novo evento
+    $(document).on('click', '#btn-novo-evento', function () {
         $('#frm-evento-container').slideDown(150);
         $(this).hide();
     });
-
-    $('#btn-cancelar-evento').on('click', function () {
+//
+    $(document).on('click', '#btn-cancelar-evento', function () {
         $('#frm-evento-container').slideUp(150);
         $('#btn-novo-evento').show();
     });
-
-    // Após salvar (tanto mensal quanto evento), recarrega o container
+//
+//    // Após salvar (tanto mensal quanto evento), recarrega o container
     setup();
 });
 
- $(document).on('change', '#slct-espec-reg', function () {
+// Handlers da GestaoAgenda (o HTML das abas e dos eventos pode ser carregado via .load()).
+$(document).off('change', '#slct-espec-reg');
+$(document).on('change', '#slct-espec-reg', function () {
+    var idEspec = $(this).val();
+    var $servidor = $('#slct-servidor-reg');
+    $servidor.html('<option value="">Carregando...</option>');
+    if (!idEspec) {
+        $servidor.html('<option value="">-- Selecione a especialidade --</option>');
+        return;
+    }
+    $.getJSON(GLOBAL_URL + 'GestaoAgenda/getServidoresByEspec/' + idEspec, function (data) {
+        var opts = '<option value="">-- Selecione --</option>';
+        if (!data.length) opts += '<option value="null">Sem profissional fixo</option>';
+        $.each(data, function (i, s) { opts += '<option value="' + s.id + '">' + s.nome + '</option>'; });
+        $servidor.html(opts);
+    });
+});
+
+$(document).off('click', '#btn-buscar-mensal').on('click', '#btn-buscar-mensal', function () {
+    var idEspec = $('#slct-espec-reg').val();
+    if (!idEspec) { alert('Selecione a especialidade.'); return; }
+    var url = GLOBAL_URL + 'GestaoAgenda/getMensal/' + ($('#slct-servidor-reg').val() || 'null') + '/' + idEspec + '/' + $('#slct-mes-reg').val() + '/' + $('#slct-ano-reg').val();
+    $('[name=container-registro-mensal]').stop(true, true).fadeOut(100).load(url, function () { $(this).fadeIn(100); });
+});
+
+var modoHistoricoAgenda = 'registros';
+function buscarHistoricoAgenda() {
+    var espec = $('#slct-espec-hist').val() || 'null';
+    var servidor = $('#slct-servidor-hist').val() || 'null';
+    var url = modoHistoricoAgenda === 'eventos'
+        ? GLOBAL_URL + 'GestaoAgenda/getEventosHistorico/' + espec + '/' + servidor + '/null/null/null/null'
+        : GLOBAL_URL + 'GestaoAgenda/getHistorico/' + espec + '/' + servidor + '/' + ($('#slct-mes-ini-hist').val() || 'null') + '/' + ($('#slct-ano-ini-hist').val() || 'null') + '/null/null';
+    $('[name=container-historico]').stop(true, true).fadeOut(100).load(url, function () { $(this).fadeIn(100); });
+}
+$(document).off('click', '#pill-registros, #pill-eventos, #btn-buscar-historico').on('click', '#pill-registros, #pill-eventos, #btn-buscar-historico', function (e) {
+    if (this.id !== 'btn-buscar-historico') e.preventDefault();
+    if (this.id === 'pill-registros' || this.id === 'pill-eventos') {
+        modoHistoricoAgenda = this.id === 'pill-eventos' ? 'eventos' : 'registros';
+        $(this).closest('ul').find('li').removeClass('active'); $(this).closest('li').addClass('active');
+    }
+    buscarHistoricoAgenda();
+});
+
+$(document).off('click', '#btn-buscar-indicadores').on('click', '#btn-buscar-indicadores', function () {
+    var url = GLOBAL_URL + 'GestaoAgenda/getIndicadores/' + $('#slct-mes-ind').val() + '/' + $('#slct-ano-ind').val();
+    $('[name=container-indicadores]').stop(true, true).fadeOut(100).load(url, function () { $(this).fadeIn(100); });
+});
+//
+$(document).on('change', '#slct-espec-reg', function () {
         var idEspec = $(this).val();
         $('#slct-servidor-reg').html('<option value=\"\">Carregando...</option>');
 
@@ -2114,10 +2163,10 @@ $(function () {
             $('#slct-servidor-reg').html(opts);
         });
     });
-
-    // ----------------------------------------
-    // Aba Registro: buscar / carregar formulário
-    // ----------------------------------------
+//
+//    // ----------------------------------------
+//    // Aba Registro: buscar / carregar formulário
+//    // ----------------------------------------
     $(document).on('click', '#btn-buscar-mensal', function () {
         var idEspec    = $('#slct-espec-reg').val();
         var idServidor = $('#slct-servidor-reg').val() || 'null';
@@ -2136,10 +2185,10 @@ $(function () {
             );
         });
     });
-
-    // ----------------------------------------
-    // Aba Histórico: carrega profissionais ao mudar especialidade
-    // ----------------------------------------
+//
+//    // ----------------------------------------
+//    // Aba Histórico: carrega profissionais ao mudar especialidade
+//    // ----------------------------------------
     $(document).on('change', '#slct-espec-hist', function () {
         var idEspec = $(this).val();
         if (!idEspec) {
@@ -2154,12 +2203,12 @@ $(function () {
             $('#slct-servidor-hist').html(opts);
         });
     });
-
-    // ----------------------------------------
-    // Aba Histórico: buscar registros ou eventos
-    // ----------------------------------------
+//
+//    // ----------------------------------------
+//    // Aba Histórico: buscar registros ou eventos
+//    // ----------------------------------------
     var modoHistorico = 'registros';
-
+//
     $(document).on('click', '#pill-registros', function (e) {
         e.preventDefault();
         modoHistorico = 'registros';
@@ -2167,7 +2216,7 @@ $(function () {
         $(this).closest('li').addClass('active');
         buscarHistorico();
     });
-
+//
     $(document).on('click', '#pill-eventos', function (e) {
         e.preventDefault();
         modoHistorico = 'eventos';
@@ -2175,11 +2224,11 @@ $(function () {
         $(this).closest('li').addClass('active');
         buscarHistorico();
     });
-
+//
     $(document).on('click', '#btn-buscar-historico', function () {
         buscarHistorico();
     });
-
+//
     function buscarHistorico() {
         var idEspec    = $('#slct-espec-hist').val()     || 'null';
         var idServidor = $('#slct-servidor-hist').val()  || 'null';
@@ -2188,7 +2237,7 @@ $(function () {
 
         var url;
         if (modoHistorico === 'eventos') {
-            url = GLOBAL_URL + 'GestaoAgenda/getEventosHistorico/' + idEspec + '/' + idServidor + '/null/null/null';
+            url = GLOBAL_URL + 'GestaoAgenda/getEventosHistorico/' + idEspec + '/' + idServidor + '/null/null/null/null';
         } else {
             url = GLOBAL_URL + 'GestaoAgenda/getHistorico/' + idEspec + '/' + idServidor + '/' + mesIni + '/' + anoIni + '/null/null';
         }
@@ -2199,10 +2248,10 @@ $(function () {
             });
         });
     }
-
-    // ----------------------------------------
-    // Aba Indicadores
-    // ----------------------------------------
+//
+//    // ----------------------------------------
+//    // Aba Indicadores
+//    // ----------------------------------------
     $(document).on('click', '#btn-buscar-indicadores', function () {
         var mes = $('#slct-mes-ind').val();
         var ano = $('#slct-ano-ind').val();
@@ -2214,9 +2263,8 @@ $(function () {
             );
         });
     });
-
-$(function () {
+//
+    var agora = new Date();
     $('[name=container-dashboard-agendas]').load(
-        GLOBAL_URL + 'GestaoAgenda/getDashboard/' + date('n') +'/'+ date('Y')
+        GLOBAL_URL + 'GestaoAgenda/getDashboard/' + (agora.getMonth() + 1) + '/' + agora.getFullYear()
     );
-});

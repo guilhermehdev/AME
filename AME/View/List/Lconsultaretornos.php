@@ -5,7 +5,9 @@ $msg = "<b class=\"text-default mrg-left\">Nenhum registro encontrado!</b>";
 if($this->getData('retornos')) {
     $retorno = $this->getData('retornos');
     $pac = $this->getData('paciente');
-    $exc = AppController::checkSession()['exc_retorno'];            
+    $exc = AppController::checkSession()['exc_retorno'];          
+       
+
 }
 
     foreach ($retorno as $r) { 

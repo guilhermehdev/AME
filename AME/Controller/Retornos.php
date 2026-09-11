@@ -216,12 +216,11 @@ class Retornos implements IPrivateTO {
     
     public function getconsulta($param) {
         $id = $param[2];
-        $nasc = $param[3];
-                
-        $pac = Daopacientes::get($id, $nasc,'null'); 
-        
+        $nasc = $param[3];                
+        $pac = Daopacientes::get($id, $nasc,'null');        
+               
         foreach ($pac as $p) {
-            $retornos[] = Daoretornos::get($p['id']);
+            $retornos[] = Daoretornos::get($p['id']);            
         }
                 
         $view = new TGui("Lconsultaretornos");      
