@@ -39,7 +39,7 @@ class AppController implements IPrivateTO {
             $oci = $_SESSION['adm']['oci'];
             $notificacao = $_SESSION['adm']['notificacao'];
             $impressos = $_SESSION['adm']['impressos'];
-            
+            $perfil = $_SESSION['adm']['perfil'];            
             $menu='';
             
         if ($cad == 1) {
@@ -167,13 +167,17 @@ class AppController implements IPrivateTO {
 
                     <div id=\"collapse7\" class=\"panel-collapse collapse\">
                         <div class=\"panel-body\">
-                            <table class=\"table\">
-                                  <tr>
+                            <table class=\"table\">";
+            
+            if ($perfil == "ADM"){
+                    $menu .= "<tr>
                                     <td>
-                                       {$f->button("button", "btn btn-link call-data", "btn-menu-notificacao-agendas", "btn-menu-notificacao-agendas", "Notificacoes/agenda", "<span class=\"glyphicon glyphicon-calendar text-primary\"></span> Agenda", null,"header")}
+                                       {$f->button("button", "btn btn-link call-data", "btn-menu-notificacao-agendas", "btn-menu-notificacao-agendas", "GestaoAgenda/index", "<span class=\"glyphicon glyphicon-calendar text-primary\"></span> Agenda", null,"header")}
                                     </td>
-                                </tr> 
-                                <tr>
+                                </tr>";
+                                       }
+                                       
+                    $menu .= "<tr>
                                     <td>
                                        {$f->button("button", "btn btn-link call-data", "btn-menu-avisos", "btn-menu-avisos", "Notificacoes/painel", "<span class=\"glyphicon glyphicon-alert text-primary\"></span> Painel", null,"header")}
                                     </td>

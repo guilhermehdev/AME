@@ -46,9 +46,9 @@ class Config {
         'SMTP_HOST' => "smtp.gmail.com",
         'SMTP_PORT' => 587,
         'SMTP_SECURE' => "tls",
-        'SMTP_USER' => "",
-        'SMTP_PASS' => "",
-        'MAIL_FROM' => "",
+        'SMTP_USER' => "amedeperuibe@gmail.com",
+        'SMTP_PASS' => "erqphplcoyfvstlm",
+        'MAIL_FROM' => "amedeperuibe@gmail.com",
         'MAIL_FROM_NAME' => "AME - Peruíbe"
                          
         ); 

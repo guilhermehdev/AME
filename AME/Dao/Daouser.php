@@ -15,14 +15,15 @@ class Daouser {
     }
     
     public static function get($cpf=null,$name=null,$id=null) {
-       
-        if($cpf != "null") {
+        $where = "";
+
+        if($cpf != null && $cpf != "null") {
             $where = " WHERE CPF='{$cpf}'";
         } 
-        if($name != "null") {
+        if($name != null && $name != "null") {
             $where = " WHERE nome LIKE '{$name}%'";
         }
-           if($id != "null") {
+        if($id != null && $id != "null") {
             $where = " WHERE id ={$id}";
         }
                 
@@ -86,13 +87,28 @@ class Daouser {
         return Maincontroller::doQuery($sql, array('PASS' => $novaSenha, 'ID' => $id));
     }
 
-    public static function gerarTokenRecuperacao($cpf, $email) {
-        $sql = "SELECT id FROM usuarios WHERE CPF=:CPF AND email=:EMAIL";
-        $ds = Maincontroller::doQuery($sql, array('CPF' => $cpf, 'EMAIL' => $email));
+    public static function gerarTokenRecuperacao($cpf, $email, $dtnasc = null) {
+        $sql = "SELECT id, email, dtnasc FROM usuarios WHERE CPF=:CPF";
+        $ds = Maincontroller::doQuery($sql, array('CPF' => $cpf));
         $row = $ds->fetch(PDO::FETCH_ASSOC);
 
         if (!$row) {
-            return false;
+            return array('erro' => 'cpf_invalido');
+        }
+
+        if (empty($row['email'])) {
+            // primeiro cadastro de e-mail: exige confirmar CPF + data de nascimento,
+            // para que não baste só saber o CPF pra sequestrar a conta
+            $dtnascInformada = $dtnasc ? date('Y-m-d', strtotime($dtnasc)) : null;
+
+            if (!$dtnascInformada || $dtnascInformada != $row['dtnasc']) {
+                return array('erro' => 'dtnasc_invalida');
+            }
+
+            $sql = "UPDATE usuarios SET email=:EMAIL WHERE id=:ID";
+            Maincontroller::doQuery($sql, array('EMAIL' => $email, 'ID' => $row['id']));
+        } elseif ($row['email'] != $email) {
+            return array('erro' => 'email_invalido');
         }
 
         $token = bin2hex(random_bytes(32));

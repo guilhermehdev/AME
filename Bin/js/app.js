@@ -2046,3 +2046,177 @@ function CartaoSus() {
    window.open('http://' + window.location.hostname + ':8080/sus?cpf=' + encodeURIComponent(cpf) + '&sexo=' + encodeURIComponent(Inpsexo), '_blank');
       
 }
+
+//Gestao Agendas//
+
+$(function () {
+
+    // Preenche os hidden fields com os valores dos selects da tela principal
+    // (os selects ficam na gestao_agenda.php, fora desta partial)
+    $('#inp-id-espec').val($('#slct-espec-reg').val());
+    $('#inp-id-servidor').val($('#slct-servidor-reg').val() || '');
+    $('#inp-mes').val($('#slct-mes-reg').val());
+    $('#inp-ano').val($('#slct-ano-reg').val());
+
+    // Preview de faltas em tempo real
+    function atualizarFaltas() {
+        var ame  = parseInt($('#inp-vagas-ame').val())  || 0;
+        var reg  = parseInt($('#inp-vagas-reg').val())  || 0;
+        var pres = parseInt($('#inp-presentes').val())  || 0;
+        var faltas = Math.max(0, (ame + reg) - pres);
+        $('#inp-faltas-preview').val(faltas);
+    }
+    $('#inp-vagas-ame, #inp-vagas-reg, #inp-presentes').on('input', atualizarFaltas);
+
+    // Mostra/oculta campo de reagendamento conforme tipo
+    $('#inp-tipo-evento').on('change', function () {
+        if ($(this).val() === 'REAGENDAMENTO' || $(this).val() === 'AUSENCIA') {
+            $('#container-reagend').show();
+        } else {
+            $('#container-reagend').hide();
+            $('#inp-dt-reagend').val('');
+        }
+    });
+
+    // Mostrar/ocultar formulário de novo evento
+    $('#btn-novo-evento').on('click', function () {
+        $('#frm-evento-container').slideDown(150);
+        $(this).hide();
+    });
+
+    $('#btn-cancelar-evento').on('click', function () {
+        $('#frm-evento-container').slideUp(150);
+        $('#btn-novo-evento').show();
+    });
+
+    // Após salvar (tanto mensal quanto evento), recarrega o container
+    setup();
+});
+
+ $(document).on('change', '#slct-espec-reg', function () {
+        var idEspec = $(this).val();
+        $('#slct-servidor-reg').html('<option value=\"\">Carregando...</option>');
+
+        if (!idEspec) {
+            $('#slct-servidor-reg').html('<option value=\"\">-- Selecione a especialidade --</option>');
+            return;
+        }
+
+        $.getJSON(GLOBAL_URL + 'GestaoAgenda/getServidoresByEspec/' + idEspec, function (data) {
+            var opts = '<option value=\"\">-- Selecione --</option>';
+            if (data.length === 0) {
+                opts += '<option value=\"null\">Sem profissional fixo</option>';
+            } else {
+                $.each(data, function (i, s) {
+                    opts += '<option value=\"' + s.id + '\">' + s.nome + '</option>';
+                });
+            }
+            $('#slct-servidor-reg').html(opts);
+        });
+    });
+
+    // ----------------------------------------
+    // Aba Registro: buscar / carregar formulário
+    // ----------------------------------------
+    $(document).on('click', '#btn-buscar-mensal', function () {
+        var idEspec    = $('#slct-espec-reg').val();
+        var idServidor = $('#slct-servidor-reg').val() || 'null';
+        var mes        = $('#slct-mes-reg').val();
+        var ano        = $('#slct-ano-reg').val();
+
+        if (!idEspec) {
+            alert('Selecione a especialidade.');
+            return;
+        }
+
+        $('[name=container-registro-mensal]').fadeOut(100, function () {
+            $('[name=container-registro-mensal]').load(
+                GLOBAL_URL + 'GestaoAgenda/getMensal/' + idServidor + '/' + idEspec + '/' + mes + '/' + ano,
+                function () { $('[name=container-registro-mensal]').fadeIn(100); }
+            );
+        });
+    });
+
+    // ----------------------------------------
+    // Aba Histórico: carrega profissionais ao mudar especialidade
+    // ----------------------------------------
+    $(document).on('change', '#slct-espec-hist', function () {
+        var idEspec = $(this).val();
+        if (!idEspec) {
+            $('#slct-servidor-hist').html('<option value=\"\">Todos</option>');
+            return;
+        }
+        $.getJSON(GLOBAL_URL + 'GestaoAgenda/getServidoresByEspec/' + idEspec, function (data) {
+            var opts = '<option value=\"\">Todos</option>';
+            $.each(data, function (i, s) {
+                opts += '<option value=\"' + s.id + '\">' + s.nome + '</option>';
+            });
+            $('#slct-servidor-hist').html(opts);
+        });
+    });
+
+    // ----------------------------------------
+    // Aba Histórico: buscar registros ou eventos
+    // ----------------------------------------
+    var modoHistorico = 'registros';
+
+    $(document).on('click', '#pill-registros', function (e) {
+        e.preventDefault();
+        modoHistorico = 'registros';
+        $(this).closest('ul').find('li').removeClass('active');
+        $(this).closest('li').addClass('active');
+        buscarHistorico();
+    });
+
+    $(document).on('click', '#pill-eventos', function (e) {
+        e.preventDefault();
+        modoHistorico = 'eventos';
+        $(this).closest('ul').find('li').removeClass('active');
+        $(this).closest('li').addClass('active');
+        buscarHistorico();
+    });
+
+    $(document).on('click', '#btn-buscar-historico', function () {
+        buscarHistorico();
+    });
+
+    function buscarHistorico() {
+        var idEspec    = $('#slct-espec-hist').val()     || 'null';
+        var idServidor = $('#slct-servidor-hist').val()  || 'null';
+        var mesIni     = $('#slct-mes-ini-hist').val()   || 'null';
+        var anoIni     = $('#slct-ano-ini-hist').val()   || 'null';
+
+        var url;
+        if (modoHistorico === 'eventos') {
+            url = GLOBAL_URL + 'GestaoAgenda/getEventosHistorico/' + idEspec + '/' + idServidor + '/null/null/null';
+        } else {
+            url = GLOBAL_URL + 'GestaoAgenda/getHistorico/' + idEspec + '/' + idServidor + '/' + mesIni + '/' + anoIni + '/null/null';
+        }
+
+        $('[name=container-historico]').fadeOut(100, function () {
+            $('[name=container-historico]').load(url, function () {
+                $('[name=container-historico]').fadeIn(100);
+            });
+        });
+    }
+
+    // ----------------------------------------
+    // Aba Indicadores
+    // ----------------------------------------
+    $(document).on('click', '#btn-buscar-indicadores', function () {
+        var mes = $('#slct-mes-ind').val();
+        var ano = $('#slct-ano-ind').val();
+
+        $('[name=container-indicadores]').fadeOut(100, function () {
+            $('[name=container-indicadores]').load(
+                GLOBAL_URL + 'GestaoAgenda/getIndicadores/' + mes + '/' + ano,
+                function () { $('[name=container-indicadores]').fadeIn(100); }
+            );
+        });
+    });
+
+$(function () {
+    $('[name=container-dashboard-agendas]').load(
+        GLOBAL_URL + 'GestaoAgenda/getDashboard/' + date('n') +'/'+ date('Y')
+    );
+});

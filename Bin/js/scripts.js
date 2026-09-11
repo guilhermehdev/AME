@@ -397,8 +397,8 @@ function submit(formdata, action, clearFields = false, form = null) {
         messagesHandler(result);
     },
     error: function (XMLHttpRequest, textStatus, errorThrown) {
-     // handleMSG('Erro: ' + XMLHttpRequest.responseText, 'danger');
-        messagesHandler(XMLHttpRequest);
+    handleMSG(XMLHttpRequest.responseText + ' - ' +textStatus+' - '+ errorThrown, 'danger');
+      
     },
   })
     .done(function () {
@@ -408,7 +408,7 @@ function submit(formdata, action, clearFields = false, form = null) {
       //callModal(null,'advice-dialog','Aten��o',3,0,'Conclu�do com sucesso!','',false,'');
     })
     .fail(function (result) {
-       messagesHandler(result);
+      // handleMSG(result);
     });
 }
 
@@ -1410,7 +1410,7 @@ $(document).on('click', '#btn-recuperar-senha', function (e) {
   if (!idUser) {
     callModal(
         null, 'advice-dialog', 'Atenção', 5, 0,
-        '<h5 class="text-muted">Selecione um profissional antes de continuar!</h5>',
+        '<h5 class="text-muted">Selecione um Usuário antes de continuar!</h5>',
         '', false, ''
     );
     return;
@@ -1556,5 +1556,3 @@ function showPopupDynamic(input, message, duration = 2500) {
 
   setTimeout(() => $popup.fadeOut(200, () => $popup.remove()), duration);
 }
-
-

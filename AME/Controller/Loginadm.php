@@ -10,7 +10,7 @@ class Loginadm {
     /**
      * @throws Exception
      */
-    public function login(): void
+    public function login()
     {
         session_start();
         session_destroy();
@@ -53,7 +53,7 @@ class Loginadm {
                        
         if($user) {                      
             session_start();
-            $_SESSION['adm'] = array('username'=>$user['nome'],'id'=>$user['id'],'cadastros'=>$user['cadastros'],'cadpac'=>$user['cadpac'],'retornos'=>$user['retornos'],'exc_retorno'=>$user['exc_retorno'],'oci'=>$user['oci'],'notificacao'=>$user['notificacao'],'impressos'=>$user['impressos']) ;         
+            $_SESSION['adm'] = array('username'=>$user['nome'],'id'=>$user['id'],'cadastros'=>$user['cadastros'],'cadpac'=>$user['cadpac'],'retornos'=>$user['retornos'],'exc_retorno'=>$user['exc_retorno'],'oci'=>$user['oci'],'notificacao'=>$user['notificacao'],'impressos'=>$user['impressos'],'perfil'=>$user['perfil']) ;         
             Functions::messages("header",URL."Loginadm/adm");
                                          
         } else {  
@@ -99,28 +99,42 @@ class Loginadm {
     }
 
     public function solicitarLink() {
-        $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
-        $cpf = Functions::cleanString($post['inp-cpf-user']);
-        $email = $post['inp-email-user'];
+        try {
+            $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+            $cpf = Functions::cleanString($post['inp-cpf-user']);
+            $email = $post['inp-email-user'];
+            $dtnasc = isset($post['inp-dtnasc-user']) ? $post['inp-dtnasc-user'] : null;
 
-        $res = Daouser::gerarTokenRecuperacao($cpf, $email);
+            $res = Daouser::gerarTokenRecuperacao($cpf, $email, $dtnasc);
 
-        if (!$res) {
-            Functions::messages("msg", "CPF ou e-mail não encontrados.", "danger");
-            return;
-        }
+            if (isset($res['erro'])) {
+                if ($res['erro'] == 'cpf_invalido') {
+                    Functions::messages("msg", "CPF inválido.", "danger");
+                } elseif ($res['erro'] == 'dtnasc_invalida') {
+                    Functions::messages("msg", "Data de nascimento não confere com o cadastro.", "danger");
+                } else {
+                    Functions::messages("msg", "E-mail não confere com o cadastrado.", "danger");
+                }
+                return;
+            }
 
-        $link = URL . "Loginadm/redefinir/" . $res['token'];
-        $corpo = "<p>Você solicitou a redefinição de senha no sistema AME - Peruíbe.</p>"
-               . "<p><a href=\"{$link}\">Clique aqui para definir uma nova senha</a></p>"
-               . "<p>Este link expira em 2 horas. Se você não fez essa solicitação, ignore este e-mail.</p>";
+            $link = URL . "Loginadm/redefinir/" . $res['token'];
+            $corpo = "<p>Você solicitou a redefinição de senha no sistema AME - Peruíbe.</p>"
+                   . "<p><a href=\"{$link}\">Clique aqui para definir uma nova senha</a></p>"
+                   . "<p>Este link expira em 2 horas. Se você não fez essa solicitação, ignore este e-mail.</p>";
 
-        $enviado = Mailer::send($res['email'], "Recuperação de senha - AME", $corpo);
+            $enviado = Mailer::send($res['email'], "Recuperação de senha - AME", $corpo);
 
-        if ($enviado) {
-            Functions::messages("msg", "Enviamos um link de recuperação para o seu e-mail.", "success");
-        } else {
-            Functions::messages("msg", "Não foi possível enviar o e-mail. Tente novamente mais tarde.", "danger");
+            if ($enviado) {
+                Functions::messages("msg", "Enviamos um link de recuperação para o seu e-mail.", "success");
+            } else {
+                Functions::messages("msg", "Não foi possível enviar o e-mail. Tente novamente mais tarde.", "danger");
+            }
+        } catch (\Throwable $e) {
+            http_response_code(200);
+            echo "ERRO CAPTURADO: " . $e->getMessage()
+               . " | Arquivo: " . $e->getFile()
+               . " | Linha: " . $e->getLine();
         }
     }
 

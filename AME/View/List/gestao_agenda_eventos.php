@@ -1,0 +1,60 @@
+<?php
+$f       = new Functions();
+$eventos = $this->getData('eventos');
+
+$tiposEvento = [
+    'AUSENCIA'      => 'Ausência',
+    'ATRASO'        => 'Atraso',
+    'REAGENDAMENTO' => 'Reagendamento',
+    'FERIAS'        => 'Férias',
+    'LICENCA'       => 'Licença',
+    'OUTRO'         => 'Outro',
+];
+
+$tipoLabel = [
+    'AUSENCIA'      => 'danger',
+    'ATRASO'        => 'warning',
+    'REAGENDAMENTO' => 'info',
+    'FERIAS'        => 'primary',
+    'LICENCA'       => 'default',
+    'OUTRO'         => 'default',
+];
+
+if (empty($eventos)) {
+    echo "<p class=\"text-muted\" style=\"padding:15px;\">Nenhum evento encontrado para os filtros selecionados.</p>";
+    return;
+}
+
+echo "<table class=\"table table-condensed table-hover table-bordered mrg-top\">
+    <thead>
+        <tr class=\"active\">
+            <th>Data</th>
+            <th>Especialidade</th>
+            <th>Profissional</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+            <th>Reagendado para</th>
+        </tr>
+    </thead>
+    <tbody>";
+
+foreach ($eventos as $ev) {
+    $tipo      = $ev['tipo'];
+    $labelCls  = $tipoLabel[$tipo]  ?? 'default';
+    $tipoNome  = $tiposEvento[$tipo] ?? $tipo;
+    $dataEv    = Functions::BRdateFormat($ev['data_evento']);
+    $dtReagend = $ev['dt_reagend'] ? Functions::BRdateFormat($ev['dt_reagend']) : '—';
+    $prof      = $ev['nome_servidor'] ?: '<span class="text-muted">—</span>';
+
+    echo "<tr>
+            <td><b>{$dataEv}</b></td>
+            <td>{$ev['especialidade']}</td>
+            <td>{$prof}</td>
+            <td><span class=\"label label-{$labelCls}\">{$tipoNome}</span></td>
+            <td>" . htmlspecialchars($ev['descricao']) . "</td>
+            <td>{$dtReagend}</td>
+          </tr>";
+}
+
+echo "  </tbody>
+      </table>";

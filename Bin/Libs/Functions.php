@@ -444,7 +444,7 @@ public static function removeParentheses($param) {
         $urlInsert = null) 
             
             {
-        return "<input class=\"{$class}\" type=\"{$type}\" id=\"{$id}\" name=\"{$name}\" data-display=\"{$dataDisplay}\" data-rule-required=\"{$required}\" data-msg-required=\"{$msgRequired}\" placeholder=\"{$placeholder}\" value=\"{$value}\"  data-toggle=\"popover\" title=\"{$popoverTitle}\" data-content=\"{$popoverContent}\" data-trigger=\"{$popoverTrigger}\" data-placement=\"{$popoverPlacement}\" data-popover-offset=\"10,60\" minlength=\"{$minLength}\" min=\"{$minLength}\" data-insert=\"{$urlInsert}\">";
+        return "<input class=\"{$class}\" type=\"{$type}\" id=\"{$id}\" name=\"{$name}\" data-display=\"{$dataDisplay}\" data-rule-required=\"{$required}\" data-msg-required=\"{$msgRequired}\" placeholder=\"{$placeholder}\" value=\"{$value}\"  data-toggle=\"popover\" title=\"{$popoverTitle}\" data-content=\"{$popoverContent}\" data-trigger=\"{$popoverTrigger}\" data-placement=\"{$popoverPlacement}\" data-popover-offset=\"10,60\" minlength=\"{$minLength}\" data-insert=\"{$urlInsert}\">";
     }
     
     public function textarea($rows,$cols,$class,$id,$name,$dataDisplay,$placeholder,$required,$msgRequired,$value) {
@@ -680,4 +680,16 @@ echo"<label>Ano</label><br>
                 
         return $post;
     }
+    
+    public static function maskEmail($email) {
+    if (!$email || strpos($email, '@') === false) {
+        return $email;
+    }
+
+    list($local, $domain) = explode('@', $email, 2);
+    $visivel = substr($local, 0, min(3, strlen($local)));
+
+    return $visivel . str_repeat('*', 6) . '@' . $domain;
+    }
+
 }
