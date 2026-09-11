@@ -682,3 +682,48 @@ fieldset[disabled] .datepicker table tr td span.active.disabled:hover.focus {
   margin-right: -5px;
 }
 /*# sourceMappingURL=bootstrap-datepicker3.css.map */
+.datepicker table tr td.dia-com-evento {
+    background-color: #f0ad4e;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 50%;
+}
+.dashboard-evento-card {
+    border-radius: 12px;
+    box-shadow: none;
+    min-height: 150px;
+    overflow: hidden;
+}
+.dashboard-evento-card .panel-heading {
+    background: #f8f9fa;
+    border-bottom: 1px solid #edf0f2;
+    border-radius: 11px 11px 0 0;
+    padding: 12px 16px;
+}
+.dashboard-evento-card .panel-body {
+    padding: 16px;
+}
+.dashboard-evento-data {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+.dashboard-evento-especialidade {
+    font-size: 16px;
+    font-weight: bold;
+    color: #337ab7;
+}
+.dashboard-evento-profissional {
+    color: #666;
+    margin-top: 4px;
+}
+.dashboard-evento-descricao {
+    margin: 14px 0 8px;
+}
+.dashboard-evento-card .dashboard-evento-reagendamento {
+    color: #555;
+    font-weight: 500;
+}
+.label-purple {
+    background-color: #7e57c2;
+}

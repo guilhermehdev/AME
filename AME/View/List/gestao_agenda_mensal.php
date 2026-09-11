@@ -165,6 +165,14 @@ echo "           </select>
             </div>
 
             <div class=\"col-sm-12 mrg-bottom\">
+                <input type=\"hidden\" name=\"inp-show-dashboard\" value=\"0\">
+                <label>
+                    <input type=\"checkbox\" name=\"inp-show-dashboard\" id=\"inp-show-dashboard\" value=\"1\">
+                    Exibir no dashboard
+                </label>
+            </div>
+
+            <div class=\"col-sm-12 mrg-bottom\">
                 <button type=\"button\" class=\"btn btn-success submit\" id=\"btn-save-evento\">
                     <span class=\"glyphicon glyphicon-floppy-disk\"></span> Salvar evento
                 </button>
@@ -187,6 +195,7 @@ echo "           </select>
                         <th>Tipo</th>
                         <th>Descrição</th>
                         <th>Reagend.</th>
+                        <th>Dashboard</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -204,6 +213,11 @@ echo "           </select>
                     <td><span class=\"label label-{$labelCls}\">{$tipoNome}</span></td>
                     <td>" . htmlspecialchars($ev['descricao']) . "</td>
                     <td>{$dtReagend}</td>
+                    <td class=\"text-center\">
+                        <input type=\"checkbox\" class=\"toggle-dashboard-evento\"
+                               data-id=\"{$ev['id']}\"
+                               " . (!empty($ev['show_dashboard']) ? 'checked' : '') . ">
+                    </td>
                     <td>
                         <button type=\"button\"
                             class=\"btn btn-danger btn-xs call-data\"

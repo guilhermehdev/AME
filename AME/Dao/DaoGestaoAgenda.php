@@ -86,23 +86,34 @@ class DaoGestaoAgenda {
         return $arr;
     }
 
-    public static function saveEvento($idMensal, $dataEvento, $tipo, $descricao, $dtReagend) {
+    public static function saveEvento($idMensal, $dataEvento, $tipo, $descricao, $dtReagend, $showDashboard = 0) {
         $sql = "INSERT INTO agenda_eventos
-                  (id_mensal, data_evento, tipo, descricao, dt_reagend)
+                  (id_mensal, data_evento, tipo, descricao, dt_reagend, show_dashboard)
                 VALUES
-                  (:IDMENSAL, :DATA, :TIPO, :DESC, :REAGEND)";
+                  (:IDMENSAL, :DATA, :TIPO, :DESC, :REAGEND, :SHOWDASHBOARD)";
         return Maincontroller::doQuery($sql, [
             'IDMENSAL' => $idMensal,
             'DATA'     => $dataEvento,
             'TIPO'     => $tipo,
             'DESC'     => $descricao,
             'REAGEND'  => $dtReagend ?: null,
+            'SHOWDASHBOARD' => (int)$showDashboard,
         ]);
     }
 
     public static function deleteEvento($id) {
         $sql = "DELETE FROM agenda_eventos WHERE id = :ID";
         return Maincontroller::doQuery($sql, ['ID' => $id]);
+    }
+
+    public static function updateEventoDashboard($id, $showDashboard) {
+        $sql = "UPDATE agenda_eventos
+                SET show_dashboard = :SHOWDASHBOARD
+                WHERE id = :ID";
+        return Maincontroller::doQuery($sql, [
+            'ID' => $id,
+            'SHOWDASHBOARD' => (int)$showDashboard
+        ]);
     }
 
     // ----------------------------------------
@@ -226,6 +237,34 @@ class DaoGestaoAgenda {
     // ----------------------------------------
     // Dashboard
     // ----------------------------------------
+
+    public static function getEventosDashboard($dataIni, $dataFim, $incluirFixos = false) {
+        $sql = "SELECT ae.*, s.nome AS nome_servidor, e.especialidade
+                FROM agenda_eventos ae
+                INNER JOIN agenda_mensal am ON am.id = ae.id_mensal
+                LEFT JOIN servidores s ON s.id = am.id_servidor
+                INNER JOIN especs e ON e.id = am.id_espec
+                WHERE (ae.data_evento BETWEEN :DATAINI AND :DATAFIM";
+        if ($incluirFixos) {
+            $sql .= " OR ae.show_dashboard = 1";
+        }
+        $sql .= ")
+                ORDER BY ae.data_evento ASC, e.especialidade, s.nome";
+        $ds = Maincontroller::doQuery($sql, ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim]);
+        $arr = [];
+        while ($row = $ds->fetch(PDO::FETCH_ASSOC)) $arr[] = $row;
+        return $arr;
+    }
+
+    public static function getDatasComEventos($dataIni, $dataFim) {
+        $sql = "SELECT DISTINCT ae.data_evento
+                FROM agenda_eventos ae
+                WHERE ae.data_evento BETWEEN :DATAINI AND :DATAFIM";
+        $ds = Maincontroller::doQuery($sql, ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim]);
+        $arr = [];
+        while ($row = $ds->fetch(PDO::FETCH_ASSOC)) $arr[] = $row['data_evento'];
+        return $arr;
+    }
 
     public static function getDashboard($mes, $ano) {
         $sql = "SELECT e.id AS id_espec,

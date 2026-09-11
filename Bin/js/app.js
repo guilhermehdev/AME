@@ -28,6 +28,134 @@ $(document).ready(function () {
         cache: false,
     });
     GLOBAL_URL = $('#URL').val();
+}); 
+
+
+function carregarEventosDashboard(dataIni, dataFim, seletor, callback) {
+    $(seletor).load(
+        GLOBAL_URL + 'GestaoAgenda/getEventosDashboard/' + dataIni + '/' + dataFim,
+        function (response, status) {
+            if (typeof callback === 'function') callback.call(this, response, status);
+        }
+    );
+}
+
+function formatarDataDashboard(data) {
+    return data.getFullYear() + '-' +
+        String(data.getMonth() + 1).padStart(2, '0') + '-' +
+        String(data.getDate()).padStart(2, '0');
+}
+
+function formatarDataBrDashboard(data) {
+    return String(data.getDate()).padStart(2, '0') + '/' +
+        String(data.getMonth() + 1).padStart(2, '0');
+}
+
+$(function () {
+    GLOBAL_URL = GLOBAL_URL || $('#URL').val();
+    $.getJSON(GLOBAL_URL + 'GestaoAgenda/getDatasComEventos/' + new Date().getFullYear(), function (datas) {
+        var datasComEvento = {};
+        $.each(datas, function (i, data) {
+            datasComEvento[data] = true;
+        });
+        var $calendario = $('#inp-data-dashboard');
+        if ($calendario.data('datepicker')) $calendario.datepicker('destroy');
+        $calendario.datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'pt-BR',
+            autoclose: true,
+            todayHighlight: true,
+            beforeShowDay: function (data) {
+                var chave = data.getFullYear() + '-' +
+                    String(data.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(data.getDate()).padStart(2, '0');
+                return datasComEvento[chave]
+                    ? { enabled: true, classes: 'dia-com-evento', tooltip: 'Há evento nesta data' }
+                    : { enabled: true };
+            }
+        });
+    });
+    var mesesDashboard = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    var anoDashboard = new Date().getFullYear();
+    $.each(mesesDashboard, function (i, nome) {
+        $('#slct-mes-dashboard').append($('<option>', {
+            value: anoDashboard + '-' + String(i + 1).padStart(2, '0') + '-01',
+            text: nome
+        }));
+    });
+    $('#slct-mes-dashboard').val(anoDashboard + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-01');
+    $(document).on('change', '#slct-periodo-dashboard', function () {
+        var porMes = $(this).val() === 'mes';
+        $('#inp-data-dashboard').toggle(!porMes);
+        $('#slct-mes-dashboard').toggle(porMes);
+    });
+    $(document).on('click', '#btn-toggle-filtro-dashboard', function () {
+        $('#filtro-dashboard').slideToggle(150);
+    });
+    $(document).on('change', '.toggle-dashboard-evento', function () {
+        var $checkbox = $(this);
+        $.post(
+            GLOBAL_URL + 'GestaoAgenda/updateEventoDashboard/' + $checkbox.data('id'),
+            {show_dashboard: $checkbox.prop('checked') ? 1 : 0},
+            function (res) {
+                if (!res || !res.success) $checkbox.prop('checked', !$checkbox.prop('checked'));
+            },
+            'json'
+        ).fail(function () {
+            $checkbox.prop('checked', !$checkbox.prop('checked'));
+        });
+    });
+    $(document).on('click', '#btn-limpar-dashboard', function () {
+        $('#container-eventos-periodo').html(
+            '<p class="text-muted" style="padding:15px;">Selecione o período para consultar.</p>'
+        );
+        $('#filtro-dashboard').slideUp(150);
+    });
+
+    var hoje = new Date();
+    var hojeTexto = formatarDataDashboard(hoje);
+    carregarEventosDashboard(hojeTexto, hojeTexto, '#container-eventos-hoje', function () {
+        $('#card-eventos-hoje').toggle($(this).find('.dashboard-eventos-cards').length > 0);
+    });
+
+    var inicioProximaSemana = new Date(hoje);
+    inicioProximaSemana.setDate(hoje.getDate() + 1);
+    var fimProximaSemana = new Date(inicioProximaSemana);
+    fimProximaSemana.setDate(inicioProximaSemana.getDate() + 6);
+    $('#periodo-proximos-dias').text(
+        formatarDataBrDashboard(inicioProximaSemana) + ' a ' +
+        formatarDataBrDashboard(fimProximaSemana)
+    );
+    carregarEventosDashboard(
+        formatarDataDashboard(inicioProximaSemana),
+        formatarDataDashboard(fimProximaSemana),
+        '#container-eventos-proxima-semana',
+        function () {
+            $('#card-eventos-proxima-semana').toggle($(this).find('.dashboard-eventos-cards').length > 0);
+        }
+    );
+
+    $(document).on('click', '#btn-buscar-dashboard', function () {
+        var referencia = $('#slct-periodo-dashboard').val() === 'mes'
+            ? $('#slct-mes-dashboard').val()
+            : validateData($('#inp-data-dashboard').val(), 'BR', 'EN');
+        if (!referencia) return;
+
+        var inicio = new Date(referencia + 'T00:00:00');
+        var fim = new Date(inicio);
+        var periodo = $('#slct-periodo-dashboard').val();
+
+        if (periodo === 'mes') {
+            inicio.setDate(1);
+            fim = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0);
+        }
+
+        carregarEventosDashboard(
+            formatarDataDashboard(inicio),
+            formatarDataDashboard(fim),
+            '#container-eventos-periodo'
+        );
+    });
 });
 
 function ajax(url) {
@@ -2128,7 +2256,7 @@ function buscarHistoricoAgenda() {
         : GLOBAL_URL + 'GestaoAgenda/getHistorico/' + espec + '/' + servidor + '/' + ($('#slct-mes-ini-hist').val() || 'null') + '/' + ($('#slct-ano-ini-hist').val() || 'null') + '/null/null';
     $('[name=container-historico]').stop(true, true).fadeOut(100).load(url, function () { $(this).fadeIn(100); });
 }
-$(document).off('click', '#pill-registros, #pill-eventos, #btn-buscar-historico').on('click', '#pill-registros, #pill-eventos, #btn-buscar-historico', function (e) {
+    $(document).off('click', '#pill-registros, #pill-eventos, #btn-buscar-historico').on('click', '#pill-registros, #pill-eventos, #btn-buscar-historico', function (e) {
     if (this.id !== 'btn-buscar-historico') e.preventDefault();
     if (this.id === 'pill-registros' || this.id === 'pill-eventos') {
         modoHistoricoAgenda = this.id === 'pill-eventos' ? 'eventos' : 'registros';
@@ -2162,6 +2290,12 @@ $(document).on('change', '#slct-espec-reg', function () {
             }
             $('#slct-servidor-reg').html(opts);
         });
+    });
+    $(document).on('click', '#btn-todos-eventos', function () {
+        $('[name=container-historico]').stop(true, true).fadeOut(100).load(
+            GLOBAL_URL + 'GestaoAgenda/getTodosEventos',
+            function () { $(this).fadeIn(100); }
+        );
     });
 //
 //    // ----------------------------------------
@@ -2207,11 +2341,11 @@ $(document).on('change', '#slct-espec-reg', function () {
 //    // ----------------------------------------
 //    // Aba Histórico: buscar registros ou eventos
 //    // ----------------------------------------
-    var modoHistorico = 'registros';
+    var modoHistoricoAgenda = 'registros';
 //
     $(document).on('click', '#pill-registros', function (e) {
         e.preventDefault();
-        modoHistorico = 'registros';
+        modoHistoricoAgenda = 'registros';
         $(this).closest('ul').find('li').removeClass('active');
         $(this).closest('li').addClass('active');
         buscarHistorico();
@@ -2219,7 +2353,7 @@ $(document).on('change', '#slct-espec-reg', function () {
 //
     $(document).on('click', '#pill-eventos', function (e) {
         e.preventDefault();
-        modoHistorico = 'eventos';
+        modoHistoricoAgenda = 'eventos';
         $(this).closest('ul').find('li').removeClass('active');
         $(this).closest('li').addClass('active');
         buscarHistorico();
@@ -2236,7 +2370,7 @@ $(document).on('change', '#slct-espec-reg', function () {
         var anoIni     = $('#slct-ano-ini-hist').val()   || 'null';
 
         var url;
-        if (modoHistorico === 'eventos') {
+        if (modoHistoricoAgenda === 'eventos') {
             url = GLOBAL_URL + 'GestaoAgenda/getEventosHistorico/' + idEspec + '/' + idServidor + '/null/null/null/null';
         } else {
             url = GLOBAL_URL + 'GestaoAgenda/getHistorico/' + idEspec + '/' + idServidor + '/' + mesIni + '/' + anoIni + '/null/null';
@@ -2265,6 +2399,30 @@ $(document).on('change', '#slct-espec-reg', function () {
     });
 //
     var agora = new Date();
-    $('[name=container-dashboard-agendas]').load(
-        GLOBAL_URL + 'GestaoAgenda/getDashboard/' + (agora.getMonth() + 1) + '/' + agora.getFullYear()
-    );
+   $('[name=container-dashboard-agendas]').load(
+    GLOBAL_URL + 'GestaoAgenda/getDashboard/' +
+    (agora.getMonth() + 1) + '/' + agora.getFullYear(),
+    function (response, status, xhr) {
+        if (status === 'error') {
+            $(this).html(
+                '<p class="text-danger">Erro ao carregar a dashboard: ' +
+                xhr.status + ' - ' + xhr.statusText + '</p>'
+            );
+            console.error('Erro dashboard:', xhr.status, xhr.statusText);
+        }
+    }
+);
+
+// Corrige a duplicidade dos handlers antigos das abas de histórico.
+$(document).off('click', '#pill-registros');
+$(document).off('click', '#pill-eventos');
+$(document).off('click', '#btn-buscar-historico');
+$(document).on('click', '#pill-registros, #pill-eventos, #btn-buscar-historico', function (e) {
+    if (this.id !== 'btn-buscar-historico') e.preventDefault();
+    if (this.id === 'pill-registros' || this.id === 'pill-eventos') {
+        modoHistoricoAgenda = this.id === 'pill-eventos' ? 'eventos' : 'registros';
+        $(this).closest('ul').find('li').removeClass('active');
+        $(this).closest('li').addClass('active');
+    }
+    buscarHistoricoAgenda();
+});

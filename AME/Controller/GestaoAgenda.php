@@ -86,6 +86,7 @@ class GestaoAgenda {
         $dataEvento = Functions::validateDate($post['inp-data-evento'], 'BR', 'EN');
         $tipo       = $post['inp-tipo-evento'];
         $descricao  = $post['inp-descricao-evento'];
+        $showDashboard = !empty($post['inp-show-dashboard']) ? 1 : 0;
         $dtReagend  = !empty($post['inp-dt-reagend'])
                         ? Functions::validateDate($post['inp-dt-reagend'], 'BR', 'EN')
                         : null;
@@ -95,7 +96,7 @@ class GestaoAgenda {
             return;
         }
 
-        $res = DaoGestaoAgenda::saveEvento($idMensal, $dataEvento, $tipo, $descricao, $dtReagend);
+        $res = DaoGestaoAgenda::saveEvento($idMensal, $dataEvento, $tipo, $descricao, $dtReagend, $showDashboard);
 
         if ($res) {
             Functions::messages("msg", "Evento registrado!", "success");
@@ -108,6 +109,15 @@ class GestaoAgenda {
         $id = $param[2];
         DaoGestaoAgenda::deleteEvento($id);
         Functions::messages("msg", "Evento removido.", "success");
+    }
+
+    public function updateEventoDashboard($param) {
+        $id = $param[2];
+        $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+        $showDashboard = !empty($post['show_dashboard']) ? 1 : 0;
+        DaoGestaoAgenda::updateEventoDashboard($id, $showDashboard);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'show_dashboard' => $showDashboard]);
     }
 
     // ----------------------------------------
@@ -145,6 +155,13 @@ class GestaoAgenda {
         );
 
         $v = new TGui("gestao_agenda_eventos");
+        $v->addData("eventos", $eventos);
+        $v->renderize(APP_VIEW_LIST, true);
+    }
+
+    public function getTodosEventos() {
+        $eventos = DaoGestaoAgenda::getEventosHistorico();
+        $v = new TGui("gestao_agenda_todos_eventos");
         $v->addData("eventos", $eventos);
         $v->renderize(APP_VIEW_LIST, true);
     }
@@ -187,6 +204,23 @@ class GestaoAgenda {
     // ----------------------------------------
     // Dashboard
     // ----------------------------------------
+
+    public function getEventosDashboard($param) {
+        $dataIni = $param[2] ?? date('Y-m-d');
+        $dataFim = $param[3] ?? $dataIni;
+        $incluirFixos = $dataIni === date('Y-m-d') && $dataFim === date('Y-m-d');
+        $eventos = DaoGestaoAgenda::getEventosDashboard($dataIni, $dataFim, $incluirFixos);
+        $v = new TGui("gestao_agenda_dashboard_eventos");
+        $v->addData("eventos", $eventos);
+        $v->renderize(APP_VIEW_LIST, true);
+    }
+
+    public function getDatasComEventos($param) {
+        $ano = isset($param[2]) ? (int)$param[2] : (int)date('Y');
+        $datas = DaoGestaoAgenda::getDatasComEventos($ano . '-01-01', $ano . '-12-31');
+        header('Content-Type: application/json');
+        echo json_encode($datas);
+    }
 
     public function getDashboard($param) {
         $mes = $param[2];
