@@ -34,6 +34,8 @@ echo "<table class=\"table table-condensed table-hover table-bordered mrg-top\">
             <th>Tipo</th>
             <th>Descrição</th>
             <th>Reagendado para</th>
+            <th>Dashboard</th>
+            <th>Ações</th>
         </tr>
     </thead>
     <tbody>";
@@ -53,6 +55,21 @@ foreach ($eventos as $ev) {
             <td><span class=\"label label-{$labelCls}\">{$tipoNome}</span></td>
             <td>" . htmlspecialchars($ev['descricao']) . "</td>
             <td>{$dtReagend}</td>
+            <td class=\"text-center\">
+                <input type=\"checkbox\" class=\"toggle-dashboard-evento\"
+                       data-id=\"{$ev['id']}\"
+                       " . (!empty($ev['show_dashboard']) ? 'checked' : '') . ">
+            </td>
+            <td>
+                <button type=\"button\" class=\"btn btn-danger btn-xs call-data\"
+                        href=\"GestaoAgenda/deleteEvento\"
+                        data-params='{\"id\":\"{$ev['id']}\"}'
+                        data-redirect=\"load\"
+                        data-redirect-target=\"container-historico\"
+                        data-redirect-url=\"GestaoAgenda/getEventosHistorico\">
+                    <span class=\"glyphicon glyphicon-trash\"></span>
+                </button>
+            </td>
           </tr>";
 }
 

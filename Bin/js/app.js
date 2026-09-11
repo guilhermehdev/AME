@@ -1,3 +1,4 @@
+var GLOBAL_URL;
 var mes = 0;
 var ano;
 var totalseg;
@@ -32,8 +33,7 @@ $(document).ready(function () {
 
 
 function carregarEventosDashboard(dataIni, dataFim, seletor, callback) {
-    $(seletor).load(
-        GLOBAL_URL + 'GestaoAgenda/getEventosDashboard/' + dataIni + '/' + dataFim,
+    $(seletor).load(GLOBAL_URL + 'GestaoAgenda/getEventosDashboard/' + dataIni + '/' + dataFim,
         function (response, status) {
             if (typeof callback === 'function') callback.call(this, response, status);
         }
@@ -2399,10 +2399,7 @@ $(document).on('change', '#slct-espec-reg', function () {
     });
 //
     var agora = new Date();
-   $('[name=container-dashboard-agendas]').load(
-    GLOBAL_URL + 'GestaoAgenda/getDashboard/' +
-    (agora.getMonth() + 1) + '/' + agora.getFullYear(),
-    function (response, status, xhr) {
+   $('[name=container-dashboard-agendas]').load(GLOBAL_URL + 'GestaoAgenda/getDashboard/' + (agora.getMonth() + 1) + '/' + agora.getFullYear(),function (response, status, xhr) {
         if (status === 'error') {
             $(this).html(
                 '<p class="text-danger">Erro ao carregar a dashboard: ' +
