@@ -51,6 +51,147 @@ function formatarDataBrDashboard(data) {
         String(data.getMonth() + 1).padStart(2, '0');
 }
 
+function carregarPdfsOci() {
+    var tentativas = 0;
+
+    function tentarCarregar() {
+        var $container = $('#container-pdfs-oci');
+        var $historico = $('#container-historico-pdfs-oci');
+        var medico = $('#inp-medico').val();
+
+        if ($container.length) {
+            function atualizarBadge() {
+                $('#badge-pdfs-oci').text($container.find('.pdf-oci-item').length);
+            }
+
+            // O conteúdo inicial pode já ter vindo renderizado pelo PHP.
+            atualizarBadge();
+
+            if (medico) {
+                $container.load(GLOBAL_URL + 'OCI/loadPdfs/' + encodeURIComponent(medico), function () {
+                    atualizarBadge();
+                });
+            }
+
+            if ($historico.length && medico) {
+                $historico.load(GLOBAL_URL + 'OCI/loadPdfsAssinados/' + encodeURIComponent(medico));
+            }
+            return;
+        }
+
+        if (tentativas < 20) {
+            tentativas++;
+            setTimeout(tentarCarregar, 250);
+        }
+    }
+
+    tentarCarregar();
+}
+
+$(document).on('click', '#btn-menu-oci', function () {
+    setTimeout(carregarPdfsOci, 50);
+});
+
+// As abas da tela de OCI são carregadas por AJAX. Por isso o evento precisa
+// ficar delegado no document para continuar funcionando após a troca do menu.
+$(document).on('click', '#tabs-oci a[data-toggle="tab"]', function (e) {
+    e.preventDefault();
+
+    var $link = $(this);
+    var alvo = $link.attr('href');
+    var $tabs = $link.closest('#tabs-oci');
+    var $conteudo = $tabs.next('.tab-content');
+
+    if (!alvo || !$conteudo.length || !$(alvo).length) return;
+
+    $link.closest('li').addClass('active').siblings('li').removeClass('active');
+    $conteudo.children('.tab-pane').removeClass('active in');
+    $(alvo).addClass('active in');
+});
+
+$(document).on('click', '.btn-excluir-pdf-oci', function (e) {
+    e.preventDefault();
+
+    var $botao = $(this);
+    var $item = $botao.closest('.pdf-oci-item');
+    var $container = $item.closest('.dashboard-pdf-alert');
+    var nome = $botao.attr('data-pdf-name') || '';
+    var pasta = $botao.attr('data-pdf-pasta') || '';
+
+    if (!nome) {
+        return;
+    }
+
+    BootstrapDialog.confirm({
+        cssClass: 'sm-dialog',
+        type: BootstrapDialog.TYPE_DANGER,
+        title: 'Excluir PDF',
+        message: 'Deseja excluir este PDF pendente?',
+        draggable: true,
+        btnCancelLabel: 'Não',
+        btnOKLabel: 'Sim',
+        btnOKClass: 'btn-danger',
+        autodestroy: true,
+        callback: function (confirmado) {
+            if (!confirmado) {
+                return;
+            }
+
+            $botao.prop('disabled', true);
+
+            $.ajax({
+                url: (window.GLOBAL_URL || $('#URL').val() || '') + 'OCI/excluirPdfGerado',
+                type: 'POST',
+                dataType: 'json',
+                data: {nome: nome, pasta: pasta}
+            }).done(function (resposta) {
+                if (!resposta || resposta.erro) {
+                    BootstrapDialog.alert({
+                        cssClass: 'sm-dialog',
+                        type: BootstrapDialog.TYPE_DANGER,
+                        title: 'Exclusão não realizada',
+                        message: (resposta && resposta.mensagem) || 'Não foi possível excluir o PDF.'
+                    });
+                    $botao.prop('disabled', false);
+                    return;
+                }
+
+                var $grupo = $item.closest('.pdfs-oci-grupo');
+                $item.remove();
+
+                var quantidade = $grupo.find('.pdf-oci-item').length;
+                if (quantidade === 0) {
+                    $grupo.remove();
+                } else {
+                    $grupo.find('.badge').text(quantidade);
+                }
+
+                var total = $container.find('.pdf-oci-item').length;
+                $('#badge-pdfs-oci').text(total);
+                $container.find('.btn-baixar-lote-serpro, .btn-enviar-pdfs-assinados').prop('disabled', total === 0);
+
+                if (total === 0) {
+                    $container.find('.check-selecionar-todos-pdfs').prop('checked', false);
+                }
+            }).fail(function (xhr) {
+                var resposta = {};
+                try {
+                    resposta = JSON.parse(xhr.responseText || '{}');
+                } catch (ex) {
+                    resposta = {};
+                }
+                BootstrapDialog.alert({
+                    cssClass: 'sm-dialog',
+                    type: BootstrapDialog.TYPE_DANGER,
+                    title: 'Erro ao excluir',
+                    message: resposta.mensagem || 'Falha de comunicação ao excluir o PDF.'
+                });
+                $botao.prop('disabled', false);
+            });
+        }
+    });
+});
+
 $(function () {
     GLOBAL_URL = GLOBAL_URL || $('#URL').val();
     $.getJSON(GLOBAL_URL + 'GestaoAgenda/getDatasComEventos/' + new Date().getFullYear(), function (datas) {

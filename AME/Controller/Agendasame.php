@@ -233,6 +233,16 @@ class Agendasame implements IPrivateTO {
             <tbody>";
 
         foreach ($pacs as $p) {
+        $paramsPaciente = htmlspecialchars(
+            json_encode([
+                'nome' => $p['nome'],
+                'dtnasc' => $p['dtnasc'],
+                'pront' => $p['pront'],
+                'contato' => $p['tel']
+            ], JSON_UNESCAPED_UNICODE),
+            ENT_QUOTES,
+            'UTF-8'
+        );
         echo    
                 "<tr class=\"bg-success\">"
                     . "<th></th>"            
@@ -243,7 +253,7 @@ class Agendasame implements IPrivateTO {
                 . "</tr>
                 <tr>"        
                     . "<td class=\"text-nowrap\">
-                            <button class=\"btn btn-primary\" name=\"btn-select-paciente\" id=\"btn-select-paciente-{$p['id']}\" data-id=\"{$p['id']}\" data-params='{\"nome\":\"{$p['nome']}\",\"dtnasc\":\"{$p['dtnasc']}\",\"pront\":\"{$p['pront']}\",\"contato\":\"{$p['tel']}\"}' data-modal-close=\"true\">
+                            <button class=\"btn btn-primary\" name=\"btn-select-paciente\" id=\"btn-select-paciente-{$p['id']}\" data-id=\"{$p['id']}\" data-params=\"{$paramsPaciente}\" data-modal-close=\"true\">
                         <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span>
                             </button>
                     </td>"

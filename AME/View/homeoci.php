@@ -6,17 +6,45 @@ $o = new OCI();
 $title = $this->getData('title');
 $idUser = $_SESSION['adm']['id'] ;
 $cboSUS = Daooci::getCBO($_SESSION['adm']['id']);
-$cbo = $cboSUS[0]['cbo'];
-$medico = $cboSUS[0]['SUS'];
+$cbo = !empty($cboSUS) ? $cboSUS[0]['cbo'] : '';
+$medico = !empty($cboSUS) ? $cboSUS[0]['SUS'] : '';
+
+$pdfs = $this->getData('pdfs') ?: array();
+$assinados = $this->getData('assinados') ?: array();
+$totalPdfs = count($pdfs);
+$pdfView = new TGui('LpdfsOCI');
+$pdfView->addData('pdfs', $pdfs);
+ob_start();
+$pdfView->renderize(APP_VIEW_LIST, true);
+$cardPdfs = ob_get_clean();
+
+$historicoView = new TGui('LpdfsOCIHistorico');
+$historicoView->addData('assinados', $assinados);
+ob_start();
+$historicoView->renderize(APP_VIEW_LIST, true);
+$cardHistorico = ob_get_clean();
+
 echo
 "<div class=\"col-sm-12\">
     <div class=\"page-header\">
-        <h3>Cadastro {$title}</h3>
+        <h4>{$title}</h4>
     </div>
     
     <input type=\"hidden\" name=\"inp-id\" id=\"inp-id\">
     <input type=\"hidden\" name=\"inp-medico\" id=\"inp-medico\" value=\"{$medico}\">
-      
+
+    <ul id=\"tabs-oci\" class=\"nav nav-tabs\" role=\"tablist\" style=\"margin-bottom:15px;\">
+    
+        <li role=\"presentation\" class=\"active\"><a href=\"#tab-cadastro-oci\" aria-controls=\"tab-cadastro-oci\" role=\"tab\" data-toggle=\"tab\"><span class=\"glyphicon glyphicon-edit\"></span> Registro</a></li>
+        
+        <li role=\"presentation\"><a href=\"#tab-assinaturas-oci\" aria-controls=\"tab-assinaturas-oci\" role=\"tab\" data-toggle=\"tab\"><span class=\"glyphicon glyphicon-pencil\"></span>Assinaturas pendentes <span id=\"badge-pdfs-oci\" class=\"badge\" style=\"margin-left:5px;background-color:#b22222;\">{$totalPdfs}</span></a></li>
+            
+        <li role=\"presentation\"><a href=\"#tab-historico-oci\" aria-controls=\"tab-historico-oci\" role=\"tab\" data-toggle=\"tab\"><span class=\"glyphicon glyphicon-ok-sign\"></span> Histórico</a></li>
+    </ul>
+
+    <div class=\"tab-content\">
+    <div role=\"tabpanel\" class=\"tab-pane active\" id=\"tab-cadastro-oci\">
+
     <div class=\"col-sm-7\">
 
         <fieldset class=\"for-panel\">
@@ -99,7 +127,7 @@ echo
                 </div>
                 
                 <div class=\"col-sm-12\">
-                     <span class=\"text-danger\"><i>* campos obrigatórios<i/></span>
+                     <span class=\"text-danger\"><i>* campos obrigatórios</i></span>
                 </div>      
 
         </fieldset>  
@@ -119,5 +147,16 @@ echo
 
     <div class=\"col-sm-5 mrg-top\" id=\"container-fila-oci\" name=\"container-fila-oci\">    
     </div>  
+
+    </div>
+
+    <div role=\"tabpanel\" class=\"tab-pane\" id=\"tab-assinaturas-oci\">
+        <div class=\"col-sm-12 mrg-bottom\" id=\"container-pdfs-oci\" name=\"container-pdfs-oci\">{$cardPdfs}</div>
+    </div>
+
+    <div role=\"tabpanel\" class=\"tab-pane\" id=\"tab-historico-oci\">
+        <div class=\"col-sm-12 mrg-bottom\" id=\"container-historico-pdfs-oci\" name=\"container-historico-pdfs-oci\">{$cardHistorico}</div>
+    </div>
+    </div>
 
 </div>";

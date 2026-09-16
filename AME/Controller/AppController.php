@@ -172,19 +172,14 @@ class AppController implements IPrivateTO {
             if ($perfil == "ADM"){
                     $menu .= "<tr>
                                     <td>
-                                       {$f->button("button", "btn btn-link call-data", "btn-menu-notificacao-agendas", "btn-menu-notificacao-agendas", "GestaoAgenda/index", "<span class=\"glyphicon glyphicon-calendar text-primary\"></span> Agenda", null,"header")}
+                                       {$f->button("button", "btn btn-link call-data", "btn-menu-notificacao-agendas", "btn-menu-notificacao-agendas", "GestaoAgenda/index", "<span class=\"glyphicon glyphicon-calendar text-primary\"></span> Ocorrências", null,"header")}
                                     </td>
                                 </tr>";
                                        }
                                        
-                    $menu .= "<tr>
+                    $menu .= "<tr>                                 
                                     <td>
-                                       {$f->button("button", "btn btn-link call-data", "btn-menu-avisos", "btn-menu-avisos", "Notificacoes/painel", "<span class=\"glyphicon glyphicon-alert text-primary\"></span> Painel", null,"header")}
-                                    </td>
-                                </tr> 
-                                  <tr>
-                                    <td>
-                                       {$f->button("button", "btn btn-link call-data", "btn-menu-confirmar", "btn-menu-confirmar", "Notificacoes/confirmar", " <i class=\"bi bi-whatsapp\"></i> Confirmação de consulta", null,"header")}
+                                       {$f->button("button", "btn btn-link call-data", "btn-menu-confirmar", "btn-menu-confirmar", "Notificacoes/confirmar", " <i class=\"bi bi-whatsapp\"></i> Mensagens", null,"header")}
                                     </td>
                                 </tr> 
                             </table>

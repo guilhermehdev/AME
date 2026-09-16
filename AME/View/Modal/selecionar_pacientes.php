@@ -84,10 +84,30 @@ echo
             . "<th>Contato</th>"                       
         . "</tr>";
 
-foreach ($users as $p) {    
+foreach ($users as $p) {
+    $paramsPaciente = htmlspecialchars(
+        json_encode([
+            'nome' => $p['nome'],
+            'dtnasc' => $p['dtnasc'],
+            'pront' => $p['pront'],
+            'contato' => $p['tel'],
+            'cpf' => $p['cpf'],
+            'mae' => $p['mae'],
+            'cep' => $p['CEP'],
+            'tipo' => $p['tipo'],
+            'logradouro' => $p['logradouro'],
+            'bairro' => $p['bairro'],
+            'numero' => $p['numero'],
+            'complemento' => $p['complemento'],
+            'idLogra' => $p['id_logradouro'],
+            'sexo' => $p['sexo']
+        ], JSON_UNESCAPED_UNICODE),
+        ENT_QUOTES,
+        'UTF-8'
+    );
       
 echo "<td class=\"text-nowrap\">
-                    <button class=\"btn btn-primary\" name=\"btn-select-paciente\" id=\"btn-select-paciente-{$p['id']}\" data-id=\"{$p['id']}\" data-params='{\"nome\":\"{$p['nome']}\",\"dtnasc\":\"{$p['dtnasc']}\",\"pront\":\"{$p['pront']}\",\"contato\":\"{$p['tel']}\",\"cpf\":\"{$p['cpf']}\",\"mae\":\"{$p['mae']}\",\"cep\":\"{$p['CEP']}\",\"tipo\":\"{$p['tipo']}\",\"logradouro\":\"{$p['logradouro']}\",\"bairro\":\"{$p['bairro']}\",\"numero\":\"{$p['numero']}\",\"complemento\":\"{$p['complemento']}\",\"idLogra\":\"{$p['id_logradouro']}\",\"sexo\":\"{$p['sexo']}\"}' data-modal-close=\"true\">
+                    <button class=\"btn btn-primary\" name=\"btn-select-paciente\" id=\"btn-select-paciente-{$p['id']}\" data-id=\"{$p['id']}\" data-params=\"{$paramsPaciente}\" data-modal-close=\"true\">
                 <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span>
                     </button>
                </td>"

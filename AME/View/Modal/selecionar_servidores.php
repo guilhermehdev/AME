@@ -14,6 +14,11 @@ echo
     <tbody>";
 
 foreach ($users as $p) {
+    $paramsServidor = htmlspecialchars(
+        json_encode(['nome' => $p['nome'], 'cpf' => $p['CPF']], JSON_UNESCAPED_UNICODE),
+        ENT_QUOTES,
+        'UTF-8'
+    );
 echo    
         "<tr class=\"bg-success\">"
             . "<th></th>"            
@@ -22,7 +27,7 @@ echo
         . "</tr>
         <tr>"        
             . "<td class=\"text-nowrap\">
-                    <button class=\"btn btn-primary\" name=\"btn-select-servidor\" id=\"btn-select-servidor-{$p['id']}\" data-id=\"{$p['id']}\" data-params='{\"nome\":\"{$p['nome']}\",\"cpf\":\"{$p['CPF']}\"}' data-modal-close=\"true\">
+                    <button class=\"btn btn-primary\" name=\"btn-select-servidor\" id=\"btn-select-servidor-{$p['id']}\" data-id=\"{$p['id']}\" data-params=\"{$paramsServidor}\" data-modal-close=\"true\">
                 <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span>
                     </button>
                </td>"

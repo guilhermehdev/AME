@@ -1,15 +1,18 @@
 <?php
 $f = new Functions();
 
-if($this->getData('fila')) {
-    $fila= $this->getData('fila');
-}
+$fila = $this->getData('fila') ?: array();
+$finalizadas = $this->getData('finalizadas') ?: array();
 
-if(!empty($fila)){
+if(!empty($fila) || !empty($finalizadas)){
 echo   
 "<fieldset class=\"for-panel\" style=\"margin-top: -10px;\">
-        <legend class=\"text-primary\">Atendimentos OCI - {$f->BRdateFormat($fila[0]['data'])}</legend> 
-            <table class=\"table-fila-oci\">
+        <legend class=\"text-primary\">Atendimentos OCI - " . $f->BRdateFormat(
+            !empty($fila) ? $fila[0]['data'] : (!empty($finalizadas) ? $finalizadas[0]['data'] : date('Y-m-d'))
+        ) . "</legend>";
+
+if(!empty($fila)) {
+    echo "<table class=\"table-fila-oci\">
                 <thead>
                     <tr>
                         <th>Nome</th>    
@@ -51,7 +54,27 @@ echo
     echo "     
                 </tbody>
             </table> 
-</fieldset>  ";
+            ";
+}
+
+if(!empty($finalizadas)) {
+    echo "<hr>
+        <h4 class=\"text-primary\">OCIs finalizadas disponíveis para assinatura</h4>
+        <table class=\"table table-striped table-hover\">
+            <thead><tr><th>APAC</th><th>Paciente</th><th>Procedimento</th></tr></thead><tbody>";
+
+    foreach ($finalizadas as $oci) {
+        echo "<tr>
+                <td>{$oci['num_apac']}</td>
+                <td>{$oci['nome']}</td>
+                <td>{$oci['procedimento']}</td>
+              </tr>";
+    }
+
+    echo "</tbody></table>";
+}
+
+echo "</fieldset>";
 } else {
-    
+    echo "";
 }
