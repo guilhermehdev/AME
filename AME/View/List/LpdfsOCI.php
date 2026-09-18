@@ -36,7 +36,7 @@ if (!empty($pdfs)) {
     echo '      </button>';
     echo '      <input type="file" class="input-pdfs-assinados" accept="application/pdf,.pdf" multiple style="display:none;">';
     echo '  </div>';
-    echo '  <small style="display:block;color:#7a2020;line-height:1.5;">Selecione os pacientes, clique em <b>Baixar selecionados</b> e escolha uma pasta-base apenas na primeira vez. O sistema criará as subpastas do médico e da data. Depois, assine em lote no SERPRO e clique em <b>Enviar assinados</b>.</small>';
+    echo '  <small style="display:block;color:#7a2020;line-height:1.5;">Selecione os pacientes, clique em <b>Baixar selecionados</b> e escolha uma pasta-base apenas na primeira vez. O sistema criará as subpastas do médico e da data. Depois, assine no SERPRO e clique em <b>Enviar assinados</b>. OCIs do executante seguem para o médico autorizador concluir a segunda assinatura.</small>';
 
     $indiceGrupo = 0;
     foreach ($grupos as $grupo) {
@@ -58,6 +58,7 @@ if (!empty($pdfs)) {
             $pdfUrl = htmlspecialchars($pdf['url'], ENT_QUOTES, 'UTF-8');
             $pdfNome = htmlspecialchars($pdf['nome'], ENT_QUOTES, 'UTF-8');
             $pdfPasta = htmlspecialchars(isset($pdf['pasta']) ? $pdf['pasta'] : '', ENT_QUOTES, 'UTF-8');
+            $etapaAssinatura = isset($pdf['etapa']) && $pdf['etapa'] === 'autorizador' ? 'autorizador' : 'executante';
             $nomePaciente = pathinfo($pdf['nome'], PATHINFO_FILENAME);
             $separador = strpos($nomePaciente, '-');
             if ($separador !== false) {
@@ -69,22 +70,25 @@ if (!empty($pdfs)) {
             echo '  <input type="checkbox" class="check-pdf-oci" aria-label="Selecionar ' . $nomePaciente . '">';
             echo '  <span class="glyphicon glyphicon-file"></span>';
             echo '  <div style="flex:1;min-width:0;">';
-            echo '      <strong title="' . $pdfNome . '">' . $nomePaciente . '</strong>';
+            echo '      <a href="' . $pdfUrl . '" target="_blank" rel="noopener" title="Abrir PDF" style="font-weight:bold;color:#7a2020;text-decoration:underline;">' . $nomePaciente . '</a>';
             echo '  </div>';
             echo '  <button type="button" class="btn btn-success btn-sm btn-assinar-serpro" style="font-size:13px;"';
             echo '          data-pdf-url="' . $pdfUrl . '"';
             echo '          data-pdf-name="' . $pdfNome . '"';
             echo '          data-pdf-original="' . $pdfNome . '"';
             echo '          data-pdf-pasta="' . $pdfPasta . '"';
+            echo '          data-pdf-etapa="' . $etapaAssinatura . '"';
             echo '          data-salvar-url="OCI/salvarPdfAssinado">';
-            echo '      <span class="glyphicon glyphicon-pencil"></span> Assinar agora';
+            echo '      <span class="glyphicon glyphicon-pencil"></span> ' . ($etapaAssinatura === 'autorizador' ? 'Assinar' : 'Assinar');
             echo '  </button>';
-            echo '  <button type="button" class="btn btn-danger btn-sm btn-excluir-pdf-oci" style="font-size:13px;"';
-            echo '          data-pdf-name="' . $pdfNome . '"';
-            echo '          data-pdf-pasta="' . $pdfPasta . '"';
-            echo '          title="Excluir PDF pendente">';
-            echo '      <span class="glyphicon glyphicon-trash"></span> Excluir';
-            echo '  </button>';
+            if ($etapaAssinatura === 'executante') {
+                echo '  <button type="button" class="btn btn-danger btn-sm btn-excluir-pdf-oci" style="font-size:13px;"';
+                echo '          data-pdf-name="' . $pdfNome . '"';
+                echo '          data-pdf-pasta="' . $pdfPasta . '"';
+                echo '          title="Excluir PDF pendente">';
+                echo '      <span class="glyphicon glyphicon-trash"></span> Excluir';
+                echo '  </button>';
+            }
             echo '</div>';
         }
 

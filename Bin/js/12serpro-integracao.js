@@ -222,7 +222,7 @@
         }, erro);
     }
 
-    function salvarNoServidor(url, base64, nomeArquivo, pasta, nomeOriginal, sucesso, erro) {
+    function salvarNoServidor(url, base64, nomeArquivo, pasta, nomeOriginal, etapa, sucesso, erro) {
         var urlBase = window.GLOBAL_URL || $('#URL').val() || '';
 
         $.ajax({
@@ -233,7 +233,8 @@
                 pdf: base64,
                 nome: nomeArquivo,
                 pasta: pasta || '',
-                original: nomeOriginal || ''
+                original: nomeOriginal || '',
+                etapa: etapa || ''
             }
         }).done(sucesso).fail(erro);
     }
@@ -364,6 +365,7 @@
                 var urlSalvar = $botao.attr('data-salvar-url');
                 var pastaPdf = $botao.attr('data-pdf-pasta') || '';
                 var nomeOriginalPdf = $botao.attr('data-pdf-original') || nomeArquivo;
+                var etapaPdf = $botao.attr('data-pdf-etapa') || '';
 
                 if (!urlSalvar) {
                     if (baixarResultado) {
@@ -374,7 +376,7 @@
                     return;
                 }
 
-                salvarNoServidor(urlSalvar, pdfAssinado, nomeAssinadoPdf, pastaPdf, nomeOriginalPdf, function (resposta) {
+                salvarNoServidor(urlSalvar, pdfAssinado, nomeAssinadoPdf, pastaPdf, nomeOriginalPdf, etapaPdf, function (resposta) {
                     if (resposta && resposta.erro) {
                         restaurarBotaoAssinatura($botao);
                         erro({ mensagem: resposta.mensagem || 'Não foi possível salvar o PDF assinado.' });
@@ -385,6 +387,9 @@
                         baixarPdf(pdfAssinado, nomeAssinadoPdf);
                     }
                     removerPdfDaLista($botao);
+                    if (typeof window.carregarPdfsOci === 'function') {
+                        window.carregarPdfsOci();
+                    }
                     restaurarBotaoAssinatura($botao);
                     sucesso(resposta || { mensagem: 'PDF assinado e salvo com sucesso.' });
                 }, function () {
@@ -438,12 +443,14 @@
         var botoes = [];
         var nomes = [];
         var pastas = [];
+        var etapas = [];
 
         $container.find('.check-pdf-oci:checked').each(function () {
             var $item = $(this).closest('.pdf-oci-item');
             var $botao = $item.find('.btn-assinar-serpro');
             var pasta = $botao.attr('data-pdf-pasta') || '';
             var nome = $botao.attr('data-pdf-name') || '';
+            var etapa = $botao.attr('data-pdf-etapa') || '';
 
             if ($botao.length) {
                 botoes.push($botao[0]);
@@ -451,10 +458,13 @@
                 if ($.inArray(pasta, pastas) === -1) {
                     pastas.push(pasta);
                 }
+                if ($.inArray(etapa, etapas) === -1) {
+                    etapas.push(etapa);
+                }
             }
         });
 
-        return { botoes: botoes, nomes: nomes, pastas: pastas };
+        return { botoes: botoes, nomes: nomes, pastas: pastas, etapas: etapas };
     }
 
     function baixarLotePorDownload($botoes, indice, $botaoLote, $container) {
@@ -526,8 +536,9 @@
         }
     }
 
-    async function selecionarPdfsAssinados($input, pasta, $container) {
+    async function selecionarPdfsAssinados($input, pasta, etapa, $container) {
         if (!window.showOpenFilePicker || !pastaOciHandle) {
+            $input.data('etapa-lote', etapa);
             $input.trigger('click');
             return;
         }
@@ -550,7 +561,7 @@
             }
 
             if (arquivos.length) {
-                enviarPdfsAssinados($input, arquivos, pasta, $container);
+                enviarPdfsAssinados($input, arquivos, pasta, etapa, $container);
             }
         } catch (ex) {
             if (!ex || ex.name !== 'AbortError') {
@@ -559,7 +570,7 @@
         }
     }
 
-    function enviarPdfsAssinados($input, arquivos, pasta, $container, indice, enviados) {
+    function enviarPdfsAssinados($input, arquivos, pasta, etapa, $container, indice, enviados) {
         indice = indice || 0;
         enviados = enviados || 0;
 
@@ -569,13 +580,17 @@
             if (typeof window.carregarPdfsOci === 'function') {
                 window.carregarPdfsOci();
             }
-            mostrarStatus(enviados + ' PDF(s) assinado(s) importado(s) com sucesso.', 'success');
+            var mensagem = etapa === 'autorizador'
+                ? enviados + ' PDF(s) concluído(s) pelo médico autorizador e enviado(s) ao histórico.'
+                : enviados + ' PDF(s) assinados pelo executante e encaminhados aos médicos autorizadores.';
+            mostrarStatus(mensagem, 'success');
             return;
         }
 
         var urlBase = window.GLOBAL_URL || $('#URL').val() || '';
         var dados = new FormData();
         dados.append('pasta', pasta || '');
+        dados.append('etapa', etapa || '');
         dados.append('arquivo', arquivos[indice], arquivos[indice].name);
 
         mostrarStatus('Enviando PDF assinado ' + (indice + 1) + ' de ' + arquivos.length + '...', 'info');
@@ -604,7 +619,7 @@
 
             removerPdfDaPasta(pasta, arquivos[indice].name);
 
-            enviarPdfsAssinados($input, arquivos, pasta, $container, indice + 1, enviados + 1);
+            enviarPdfsAssinados($input, arquivos, pasta, etapa, $container, indice + 1, enviados + 1);
         }).fail(function (xhr) {
             var resposta = {};
             try {
@@ -661,25 +676,32 @@
             return;
         }
 
+        if (selecao.etapas.length !== 1) {
+            mostrarStatus('Separe os PDFs do executante e do autorizador em envios diferentes.', 'warning');
+            return;
+        }
+
         var $input = $container.find('.input-pdfs-assinados');
         $input
             .data('pasta-lote', selecao.pastas[0])
+            .data('etapa-lote', selecao.etapas[0])
             .data('container-pdfs', $container);
 
-        selecionarPdfsAssinados($input, selecao.pastas[0], $container);
+        selecionarPdfsAssinados($input, selecao.pastas[0], selecao.etapas[0], $container);
     });
 
     $(document).on('change', '.input-pdfs-assinados', function () {
         var $input = $(this);
         var arquivos = this.files || [];
         var pasta = $input.data('pasta-lote') || '';
+        var etapa = $input.data('etapa-lote') || '';
         var $container = $input.data('container-pdfs');
 
-        if (!arquivos.length || !$container || !pasta) {
+        if (!arquivos.length || !$container || !etapa) {
             return;
         }
 
-        enviarPdfsAssinados($input, arquivos, pasta, $container);
+        enviarPdfsAssinados($input, arquivos, pasta, etapa, $container);
     });
 
     $(document).on('click', '.btn-assinar-serpro', function (evento) {

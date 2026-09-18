@@ -35,79 +35,47 @@ class OCI {
     public function salvarPdfAssinado(){
         header('Content-Type: application/json; charset=utf-8');
 
-        if (!AppController::checkSession()) {
+        $sessao = AppController::checkSession();
+        if (!$sessao) {
             http_response_code(401);
             echo json_encode(array('erro' => true, 'mensagem' => 'Sessão expirada. Faça login novamente.'));
             return;
         }
 
         $base64 = isset($_POST['pdf']) ? $_POST['pdf'] : '';
-        $nome = isset($_POST['nome']) ? $_POST['nome'] : 'documento_assinado.pdf';
-        $nomeOriginalInformado = isset($_POST['original']) ? basename($_POST['original']) : basename($nome);
+        $nomeOriginal = isset($_POST['original']) ? basename($_POST['original']) : '';
         $pastaRecebida = isset($_POST['pasta']) ? trim(str_replace('\\', '/', $_POST['pasta'])) : '';
+        $etapa = isset($_POST['etapa']) ? $_POST['etapa'] : '';
         $base64 = preg_replace('/^data:application\/pdf;base64,/', '', $base64);
         $conteudo = base64_decode(str_replace(' ', '+', $base64), true);
 
-        if ($conteudo === false || substr($conteudo, 0, 4) !== '%PDF') {
+        if ($conteudo === false || substr($conteudo, 0, 4) !== '%PDF' || $nomeOriginal === '') {
             http_response_code(422);
-            echo json_encode(array('erro' => true, 'mensagem' => 'O conteúdo recebido não é um PDF válido.'));
+            echo json_encode(array('erro' => true, 'mensagem' => 'O PDF assinado ou o arquivo de origem é inválido.'));
             return;
         }
 
-        $partesPasta = array();
-        if ($pastaRecebida !== '') {
-            foreach (explode('/', $pastaRecebida) as $partePasta) {
-                $partePasta = trim($partePasta);
-                if ($partePasta === '' || $partePasta === '.' || $partePasta === '..') {
-                    continue;
-                }
-
-                if (preg_match('/^[\pL\pN _-]+$/u', $partePasta)) {
-                    $partesPasta[] = $partePasta;
-                }
-            }
-        }
-
-        $subpasta = implode(DIRECTORY_SEPARATOR, $partesPasta);
-        $diretorioBase = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Impressos' . DIRECTORY_SEPARATOR . 'OCI' . DIRECTORY_SEPARATOR . 'Assinados' . DIRECTORY_SEPARATOR;
-        $diretorio = $diretorioBase . ($subpasta !== '' ? $subpasta . DIRECTORY_SEPARATOR : '');
-
-        if (!is_dir($diretorio) && !mkdir($diretorio, 0755, true)) {
-            http_response_code(500);
-            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível criar a pasta de PDFs assinados.'));
+        $dadosMedico = Daooci::getCBO(isset($sessao['id']) ? $sessao['id'] : null);
+        if (empty($dadosMedico) || empty($dadosMedico[0]['SUS'])) {
+            http_response_code(403);
+            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível identificar o médico conectado.'));
             return;
         }
 
-        $nome = pathinfo(basename($nome), PATHINFO_FILENAME);
-        $nome = preg_replace('/[^A-Za-z0-9_-]+/', '_', $nome);
-        $nome = trim($nome, '_');
-        if ($nome === '') {
-            $nome = 'documento_assinado';
+        $resultado = Daooci::processarPdfAssinado(
+            $nomeOriginal,
+            $conteudo,
+            $pastaRecebida,
+            $etapa,
+            $dadosMedico[0]['SUS'],
+            isset($dadosMedico[0]['oci_autorizador']) ? $dadosMedico[0]['oci_autorizador'] : 0
+        );
+
+        if (!empty($resultado['erro'])) {
+            http_response_code(422);
         }
 
-        $arquivo = $nome . '_' . date('Ymd_His') . '_' . substr(sha1(uniqid('', true)), 0, 6) . '.pdf';
-        $caminho = $diretorio . $arquivo;
-
-        if (file_put_contents($caminho, $conteudo) === false) {
-            http_response_code(500);
-            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível salvar o PDF assinado.'));
-            return;
-        }
-
-        $ociAtualizada = Daooci::atualizarAssinadoPorArquivo($nomeOriginalInformado, 1);
-
-        $urlArquivo = URL . 'Impressos/OCI/Assinados/';
-        foreach ($partesPasta as $partePasta) {
-            $urlArquivo .= rawurlencode($partePasta) . '/';
-        }
-        $urlArquivo .= rawurlencode($arquivo);
-
-        echo json_encode(array(
-            'erro' => false,
-            'mensagem' => 'PDF assinado e salvo no servidor.',
-            'arquivo' => $urlArquivo,
-            'ociAtualizada' => $ociAtualizada
-        ));
+        echo json_encode($resultado);
     }
 
     public function excluirPdfGerado(){
@@ -143,33 +111,18 @@ class OCI {
     public function salvarPdfAssinadoLote(){
         header('Content-Type: application/json; charset=utf-8');
 
-        if (!AppController::checkSession()) {
+        $sessao = AppController::checkSession();
+        if (!$sessao) {
             http_response_code(401);
             echo json_encode(array('erro' => true, 'mensagem' => 'Sessão expirada. Faça login novamente.'));
             return;
         }
 
         $pastaRecebida = isset($_POST['pasta']) ? trim(str_replace('\\', '/', $_POST['pasta'])) : '';
-        $partesPasta = array();
-
-        foreach (explode('/', $pastaRecebida) as $partePasta) {
-            $partePasta = trim($partePasta);
-            if ($partePasta === '' || $partePasta === '.' || $partePasta === '..') {
-                continue;
-            }
-
-            if (!preg_match('/^[\pL\pN _-]+$/u', $partePasta)) {
-                http_response_code(422);
-                echo json_encode(array('erro' => true, 'mensagem' => 'Pasta do lote inválida.'));
-                return;
-            }
-
-            $partesPasta[] = $partePasta;
-        }
-
-        if (empty($partesPasta) || !isset($_FILES['arquivo'])) {
+        $etapa = isset($_POST['etapa']) ? $_POST['etapa'] : '';
+        if ($pastaRecebida === '' || !isset($_FILES['arquivo'])) {
             http_response_code(422);
-            echo json_encode(array('erro' => true, 'mensagem' => 'Selecione um PDF assinado e informe a data do lote.'));
+            echo json_encode(array('erro' => true, 'mensagem' => 'Selecione um PDF assinado e informe a pasta do lote.'));
             return;
         }
 
@@ -188,41 +141,6 @@ class OCI {
             return;
         }
 
-        $subpasta = implode(DIRECTORY_SEPARATOR, $partesPasta);
-        $diretorioGerados = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Impressos' . DIRECTORY_SEPARATOR . 'OCI' . DIRECTORY_SEPARATOR . 'Gerados' . DIRECTORY_SEPARATOR . $subpasta . DIRECTORY_SEPARATOR;
-        $diretorioAssinados = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Impressos' . DIRECTORY_SEPARATOR . 'OCI' . DIRECTORY_SEPARATOR . 'Assinados' . DIRECTORY_SEPARATOR . $subpasta . DIRECTORY_SEPARATOR;
-        $arquivoOrigem = $diretorioGerados . $nomeOriginal;
-
-        // Dependendo da configuração do SERPRO, o lote pode manter o nome
-        // original ou criar uma cópia com sufixo "_assinado"/"-assinado".
-        // Nesse segundo caso, localiza o PDF original pelo nome-base para que
-        // o médico não precise renomear os arquivos antes de enviá-los.
-        if (!is_file($arquivoOrigem) && is_dir($diretorioGerados)) {
-            $nomeBaseUpload = pathinfo($nomeOriginal, PATHINFO_FILENAME);
-            $nomeBaseSemAssinatura = preg_replace('/(?:[ _-]+)(?:assinado|signed)(?:[ _-].*)?$/iu', '', $nomeBaseUpload);
-            $nomeBaseSemAssinatura = trim($nomeBaseSemAssinatura, " _-");
-
-            foreach (scandir($diretorioGerados) as $arquivoGerado) {
-                if ($arquivoGerado === '.' || $arquivoGerado === '..' ||
-                    strtolower(pathinfo($arquivoGerado, PATHINFO_EXTENSION)) !== 'pdf') {
-                    continue;
-                }
-
-                $nomeBaseGerado = pathinfo($arquivoGerado, PATHINFO_FILENAME);
-                if (strcasecmp($nomeBaseGerado, $nomeBaseSemAssinatura) === 0) {
-                    $nomeOriginal = $arquivoGerado;
-                    $arquivoOrigem = $diretorioGerados . $arquivoGerado;
-                    break;
-                }
-            }
-        }
-
-        if (!is_file($arquivoOrigem)) {
-            http_response_code(422);
-            echo json_encode(array('erro' => true, 'mensagem' => 'O PDF não pertence ao lote selecionado.'));
-            return;
-        }
-
         $conteudo = file_get_contents($arquivoUpload['tmp_name']);
         if ($conteudo === false || substr($conteudo, 0, 4) !== '%PDF') {
             http_response_code(422);
@@ -230,43 +148,30 @@ class OCI {
             return;
         }
 
-        if (sha1_file($arquivoOrigem) === sha1_file($arquivoUpload['tmp_name'])) {
+        $dadosMedico = Daooci::getCBO(isset($sessao['id']) ? $sessao['id'] : null);
+        if (empty($dadosMedico) || empty($dadosMedico[0]['SUS'])) {
+            http_response_code(403);
+            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível identificar o médico conectado.'));
+            return;
+        }
+
+        $resultado = Daooci::processarPdfAssinado(
+            $nomeOriginal,
+            $conteudo,
+            $pastaRecebida,
+            $etapa,
+            $dadosMedico[0]['SUS'],
+            isset($dadosMedico[0]['oci_autorizador']) ? $dadosMedico[0]['oci_autorizador'] : 0
+        );
+
+        if (!empty($resultado['erro'])) {
             http_response_code(422);
-            echo json_encode(array('erro' => true, 'mensagem' => 'Este PDF ainda não parece ter sido assinado pelo SERPRO.'));
+            echo json_encode($resultado);
             return;
         }
 
-        if (!is_dir($diretorioAssinados) && !mkdir($diretorioAssinados, 0755, true)) {
-            http_response_code(500);
-            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível criar a pasta de PDFs assinados.'));
-            return;
-        }
-
-        $nomeBase = pathinfo($nomeOriginal, PATHINFO_FILENAME);
-        $nomeBase = preg_replace('/[^A-Za-z0-9_-]+/', '_', $nomeBase);
-        $nomeBase = trim($nomeBase, '_');
-        if ($nomeBase === '') {
-            $nomeBase = 'documento_assinado';
-        }
-
-        $arquivoAssinado = $nomeBase . '_assinado_' . date('Ymd_His') . '_' . substr(sha1(uniqid('', true)), 0, 6) . '.pdf';
-        $caminhoAssinado = $diretorioAssinados . $arquivoAssinado;
-
-        if (file_put_contents($caminhoAssinado, $conteudo) === false) {
-            http_response_code(500);
-            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível salvar o PDF assinado.'));
-            return;
-        }
-
-        $ociAtualizada = Daooci::atualizarAssinadoPorArquivo($nomeOriginal, 1);
-
-        echo json_encode(array(
-            'erro' => false,
-            'mensagem' => 'PDF assinado importado com sucesso.',
-            'arquivos' => array($nomeOriginal),
-            'arquivo' => $arquivoAssinado,
-            'ociAtualizada' => $ociAtualizada
-        ));
+        $resultado['arquivos'] = array(isset($resultado['nomeOrigem']) ? $resultado['nomeOrigem'] : $nomeOriginal);
+        echo json_encode($resultado);
     }
 
     public function solicitarPdf(){
