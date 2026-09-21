@@ -11,7 +11,7 @@ $meses = [
 
 $tiposEvento = [
     'AUSENCIA'      => 'Ausência',
-    'ATRASO'        => 'Atraso',
+    'FOLGA'         => 'Folga',
     'REAGENDAMENTO' => 'Reagendamento',
     'FERIAS'        => 'Férias',
     'LICENCA'       => 'Licença',
@@ -21,10 +21,10 @@ $tiposEvento = [
 // Labels de tipo para exibição
 $tipoLabel = [
     'AUSENCIA'      => 'danger',
-    'ATRASO'        => 'warning',
+    'FOLGA'        => 'warning',
     'REAGENDAMENTO' => 'info',
-    'FERIAS'        => 'primary',
-    'LICENCA'       => 'default',
+    'FERIAS'        => 'success',
+    'LICENCA'       => 'primary',
     'OUTRO'         => 'default',
 ];
 
@@ -35,7 +35,7 @@ $vagasOfertadas  = $mensal ? $mensal['vagas_ofertadas']  : 0;
 $presentes       = $mensal ? $mensal['presentes']        : 0;
 $faltas          = $mensal ? $mensal['faltas']           : 0;
 $obs             = $mensal ? $mensal['observacao']       : '';
-$nomeProfissional = $mensal ? ($mensal['nome_servidor'] ?? 'Sem profissional fixo') : '';
+$nomeProfissional = $mensal ? (isset($mensal['nome_servidor']) ? $mensal['nome_servidor'] : 'Sem profissional fixo') : '';
 $nomeEspec       = $mensal ? $mensal['especialidade']   : '';
 $mesNome         = $mensal ? ($meses[(int)$mensal['mes']] . '/' . $mensal['ano']) : '';
 
@@ -81,17 +81,17 @@ echo "<form class=\"form-horizontal\" method=\"POST\"
 
     <div class=\"col-sm-6 mrg-bottom\">
         <label>Vagas AME</label>
-        {$f->input('number', 'form-control', 'inp-vagas-ame', 'inp-vagas-ame', '', '0', '', '', '', 1, '', $vagasAme)}
+        {$f->input('number', 'form-control', 'inp-vagas-ame', 'inp-vagas-ame', '', '0', false, '', $vagasAme)}
     </div>
 
     <div class=\"col-sm-6 mrg-bottom\">
         <label>Vagas REG</label>
-        {$f->input('number', 'form-control', 'inp-vagas-reg', 'inp-vagas-reg', '', '0', '', '', '', 1, '', $vagasReg)}
+        {$f->input('number', 'form-control', 'inp-vagas-reg', 'inp-vagas-reg', '', '0', false, '', $vagasReg)}
     </div>
 
     <div class=\"col-sm-6 mrg-bottom\">
         <label>Presentes</label>
-        {$f->input('number', 'form-control', 'inp-presentes', 'inp-presentes', '', '0', '', '', '', 1, '', $presentes)}
+        {$f->input('number', 'form-control', 'inp-presentes', 'inp-presentes', '', '0', false, '', $presentes)}
     </div>
 
     <div class=\"col-sm-6 mrg-bottom\">
@@ -121,12 +121,12 @@ echo "<form class=\"form-horizontal\" method=\"POST\"
 // ----------------------------------------
 if ($mensal) {
     echo "<fieldset class=\"for-panel mrg-top\">
-            <legend class=\"text-primary\">
-                Eventos neste mês
-                <button type=\"button\" class=\"btn btn-primary btn-xs pull-right\" id=\"btn-novo-evento\">
+            <legend class=\"text-primary\">Eventos neste mês</legend>
+            <div class=\"mrg-bottom\">
+                <button type=\"button\" class=\"btn btn-primary btn-xs\" id=\"btn-novo-evento\">
                     <span class=\"glyphicon glyphicon-plus\"></span> Adicionar evento
                 </button>
-            </legend>";
+            </div>";
 
     // Formulário de novo evento (oculto por padrão)
     echo "<div id=\"frm-evento-container\" style=\"display:none;\">
@@ -203,8 +203,8 @@ echo "           </select>
 
         foreach ($eventos as $ev) {
             $tipo      = $ev['tipo'];
-            $labelCls  = $tipoLabel[$tipo] ?? 'default';
-            $tipoNome  = $tiposEvento[$tipo] ?? $tipo;
+            $labelCls  = isset($tipoLabel[$tipo]) ? $tipoLabel[$tipo] : 'default';
+            $tipoNome  = isset($tiposEvento[$tipo]) ? $tiposEvento[$tipo] : $tipo;
             $dataEv    = Functions::BRdateFormat($ev['data_evento']);
             $dtReagend = $ev['dt_reagend'] ? Functions::BRdateFormat($ev['dt_reagend']) : '—';
 
@@ -220,12 +220,10 @@ echo "           </select>
                     </td>
                     <td>
                         <button type=\"button\"
-                            class=\"btn btn-danger btn-xs call-data\"
-                            href=\"GestaoAgenda/deleteEvento\"
-                            data-params='{\"id\":\"{$ev['id']}\"}'
-                            data-redirect=\"load\"
-                            data-redirect-target=\"container-registro-mensal\"
-                            data-redirect-url=\"GestaoAgenda/getMensal\">
+                            class=\"btn btn-danger btn-xs btn-excluir-evento\"
+                            data-id=\"{$ev['id']}\"
+                            data-origem=\"mensal\"
+                            title=\"Excluir evento\">
                             <span class=\"glyphicon glyphicon-trash\"></span>
                         </button>
                     </td>

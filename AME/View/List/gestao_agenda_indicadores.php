@@ -32,7 +32,7 @@ foreach ($indicadores as $espec => $dados) {
 
 $pctGeral      = $totalOfertadas > 0 ? round($totalPresentes / $totalOfertadas * 100) : 0;
 $pctGeralClass = $pctGeral >= 80 ? 'success' : ($pctGeral >= 50 ? 'warning' : 'danger');
-$mesNome       = ($meses[(int)$mes] ?? $mes) . '/' . $ano;
+$mesNome       = (isset($meses[(int)$mes]) ? $meses[(int)$mes] : $mes) . '/' . $ano;
 
 // Cards de resumo
 echo "<div class=\"col-sm-12 mrg-bottom\">

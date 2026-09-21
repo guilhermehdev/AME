@@ -17,17 +17,16 @@ foreach ($grupo as $especialidade => $profissionais) {
     foreach ($profissionais as $profissional => $lista) {
         echo '<h5 style="padding-left:15px;"><strong>' . htmlspecialchars($profissional) . '</strong></h5>';
         echo '<table class="table table-condensed table-hover table-bordered">';
-        echo '<tr class="active"><th>Data</th><th>Tipo</th><th>Descrição</th><th>Reagendado para</th><th>Dashboard</th><th>Ações</th></tr>';
+        echo '<tr class="active"><th>Data</th><th>Tipo</th><th>Descrição</th><th>Criado em</th><th>Reagendado para</th><th>Dashboard</th><th>Ações</th></tr>';
         foreach ($lista as $evento) {
             $data = Functions::BRdateFormat($evento['data_evento']);
+            $criadoEm = !empty($evento['criado_em']) ? Functions::BRfullDateTime($evento['criado_em']) : '—';
             $reagendado = $evento['dt_reagend'] ? Functions::BRdateFormat($evento['dt_reagend']) : '—';
             echo '<tr><td>' . $data . '</td><td>' . htmlspecialchars($evento['tipo']) . '</td><td>' .
-                htmlspecialchars($evento['descricao']) . '</td><td>' . $reagendado . '</td><td class="text-center">' .
+                htmlspecialchars($evento['descricao']) . '</td><td><small>' . $criadoEm . '</small></td><td>' . $reagendado . '</td><td class="text-center">' .
                 '<input type="checkbox" class="toggle-dashboard-evento" data-id="' . $evento['id'] . '" ' .
                 (!empty($evento['show_dashboard']) ? 'checked' : '') . '></td><td>' .
-                '<button type="button" class="btn btn-danger btn-xs call-data" href="GestaoAgenda/deleteEvento" ' .
-                'data-params=\'{"id":"' . $evento['id'] . '"}\' data-redirect="load" ' .
-                'data-redirect-target="container-historico" data-redirect-url="GestaoAgenda/getTodosEventos">' .
+                '<button type="button" class="btn btn-danger btn-xs btn-excluir-evento" data-id="' . (int)$evento['id'] . '" data-origem="todos" title="Excluir evento">' .
                 '<span class="glyphicon glyphicon-trash"></span></button></td></tr>';
         }
         echo '</table>';

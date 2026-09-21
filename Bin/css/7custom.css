@@ -924,6 +924,10 @@ table .header-danger {
     color:#FF8C00;
 }
 
+.small.text-dark {
+    color:#333;
+}
+
 .text-white {
     color: #fff;
 }
@@ -979,6 +983,119 @@ table .header-danger {
 
 .w100 {
     width: 100%;
+}
+
+/* No desktop, mantém os cards compactos até o usuário passar o mouse. */
+@media (hover: hover) and (pointer: fine) {
+    .dashboard-evento-card {
+        min-height: 0 !important;
+    }
+
+    .dashboard-evento-card .panel-heading {
+        position: relative;
+        box-sizing: border-box;
+        height: 84px;
+        overflow: hidden;
+        padding-right: 34px !important;
+        transition: height 350ms ease;
+    }
+
+    .dashboard-evento-card-preview {
+        display: -webkit-box;
+        margin-top: 4px;
+        padding-right: 44px;
+        overflow: hidden;
+        color: #444;
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 1.3;
+        transition: opacity 250ms ease;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .dashboard-evento-card-mais {
+        position: absolute;
+        right: 34px;
+        bottom: 7px;
+        background-color: #777;
+        font-size: 11px;
+        transition: opacity 250ms ease;
+    }
+
+    .dashboard-evento-expandir-icon {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        transition: transform 350ms ease;
+        color: #337ab7;
+    }
+
+    .dashboard-evento-card .panel-body {
+        max-height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition:
+            max-height 700ms ease,
+            padding 450ms ease,
+            opacity 550ms ease,
+            transform 550ms ease;
+    }
+
+    .dashboard-evento-card:hover .panel-body,
+    .dashboard-evento-card:focus-within .panel-body {
+        max-height: 420px !important;
+        padding: 12px !important;
+        overflow-y: auto !important;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .dashboard-evento-card:hover .panel-heading,
+    .dashboard-evento-card:focus-within .panel-heading {
+        height: 42px;
+    }
+
+    .dashboard-evento-card:hover .dashboard-evento-card-preview,
+    .dashboard-evento-card:focus-within .dashboard-evento-card-preview,
+    .dashboard-evento-card:hover .dashboard-evento-card-mais,
+    .dashboard-evento-card:focus-within .dashboard-evento-card-mais {
+        opacity: 0;
+    }
+
+    .dashboard-evento-card:hover .dashboard-evento-expandir-icon,
+    .dashboard-evento-card:focus-within .dashboard-evento-expandir-icon {
+        transform: translateY(-50%) rotate(180deg);
+    }
+}
+
+/* Em telas touch, deixa o conteúdo aberto porque não existe hover. */
+@media (hover: none), (pointer: coarse) {
+    .dashboard-evento-card .panel-heading {
+        height: auto;
+        min-height: 0;
+        transition: none;
+    }
+
+    .dashboard-evento-expandir-icon {
+        display: none;
+    }
+
+    .dashboard-evento-card-preview,
+    .dashboard-evento-card-mais {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-evento-card .panel-body,
+    .dashboard-evento-expandir-icon {
+        transition: none;
+    }
 }
 
 /* Popup container */

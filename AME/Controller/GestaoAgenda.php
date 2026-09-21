@@ -5,6 +5,26 @@
  */
 class GestaoAgenda {
 
+    private function converterDataAgenda($valor) {
+        $valor = trim((string)$valor);
+
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $valor, $partes)) {
+            $dia = (int)$partes[1];
+            $mes = (int)$partes[2];
+            $ano = (int)$partes[3];
+        } elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valor, $partes)) {
+            $ano = (int)$partes[1];
+            $mes = (int)$partes[2];
+            $dia = (int)$partes[3];
+        } else {
+            return false;
+        }
+
+        return checkdate($mes, $dia, $ano)
+            ? sprintf('%04d-%02d-%02d', $ano, $mes, $dia)
+            : false;
+    }
+
     private function checkSession() {
         if (!AppController::checkSession()) {
             header("location: " . URL . "Loginadm/login");
@@ -54,14 +74,25 @@ class GestaoAgenda {
     public function saveMensal() {
         $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
 
-        $idServidor = !empty($post['inp-id-servidor']) ? $post['inp-id-servidor'] : null;
-        $idEspec    = $post['inp-id-espec'];
-        $mes        = $post['inp-mes'];
-        $ano        = $post['inp-ano'];
-        $vagasAme   = $post['inp-vagas-ame']   ?? 0;
-        $vagasReg   = $post['inp-vagas-reg']   ?? 0;
-        $presentes  = $post['inp-presentes']   ?? 0;
-        $obs        = $post['inp-observacao']  ?? null;
+        if (!is_array($post)) {
+            Functions::messages("msg", "Não foi possível ler os dados do formulário. Atualize a tela e tente novamente.", "danger");
+            return;
+        }
+
+        $servidorPost = isset($post['inp-id-servidor']) ? trim($post['inp-id-servidor']) : '';
+        $idServidor = ($servidorPost !== '' && strtolower($servidorPost) !== 'null') ? (int)$servidorPost : null;
+        $idEspec    = isset($post['inp-id-espec']) ? (int)$post['inp-id-espec'] : 0;
+        $mes        = isset($post['inp-mes']) ? (int)$post['inp-mes'] : 0;
+        $ano        = isset($post['inp-ano']) ? (int)$post['inp-ano'] : 0;
+        $vagasAme   = isset($post['inp-vagas-ame'])  ? $post['inp-vagas-ame']  : 0;
+        $vagasReg   = isset($post['inp-vagas-reg'])  ? $post['inp-vagas-reg']  : 0;
+        $presentes  = isset($post['inp-presentes'])  ? $post['inp-presentes']  : 0;
+        $obs        = isset($post['inp-observacao']) ? $post['inp-observacao'] : null;
+
+        if ($idEspec <= 0 || $mes < 1 || $mes > 12 || $ano <= 0) {
+            Functions::messages("msg", "Especialidade, mês ou ano inválido. Selecione o período novamente e tente salvar.", "danger");
+            return;
+        }
 
         $res = DaoGestaoAgenda::saveMensal(
             $idServidor, $idEspec, $mes, $ano,
@@ -75,6 +106,30 @@ class GestaoAgenda {
         }
     }
 
+    public function deleteMensal($param) {
+        $id = isset($param[2]) ? (int)$param[2] : 0;
+        $sucesso = $id > 0 ? DaoGestaoAgenda::deleteMensal($id) : false;
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => (bool)$sucesso,
+            'mensagem' => $sucesso ? 'Registro mensal excluído.' : 'Não foi possível excluir o registro mensal.'
+        ]);
+    }
+
+    public function updateMensalDashboard($param) {
+        $id = isset($param[2]) ? (int)$param[2] : 0;
+        $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+        $showDashboard = is_array($post) && !empty($post['show_dashboard']) ? 1 : 0;
+        $resultado = $id > 0 ? DaoGestaoAgenda::updateMensalDashboard($id, $showDashboard) : false;
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $resultado !== false,
+            'show_dashboard' => $showDashboard
+        ]);
+    }
+
     // ----------------------------------------
     // Eventos
     // ----------------------------------------
@@ -82,17 +137,43 @@ class GestaoAgenda {
     public function saveEvento() {
         $post = filter_input_array(INPUT_POST, FILTER_DEFAULT);
 
-        $idMensal   = $post['inp-id-mensal'];
-        $dataEvento = Functions::validateDate($post['inp-data-evento'], 'BR', 'EN');
-        $tipo       = $post['inp-tipo-evento'];
-        $descricao  = $post['inp-descricao-evento'];
+        if (!is_array($post)) {
+            Functions::messages("msg", "Não foi possível ler os dados do evento.", "danger");
+            return;
+        }
+
+        $idMensal   = isset($post['inp-id-mensal']) ? (int)$post['inp-id-mensal'] : 0;
+        $dataEvento = isset($post['inp-data-evento'])
+                        ? $this->converterDataAgenda($post['inp-data-evento']) : false;
+        $tipo       = isset($post['inp-tipo-evento']) ? trim($post['inp-tipo-evento']) : '';
+        $descricao  = isset($post['inp-descricao-evento']) ? trim($post['inp-descricao-evento']) : '';
         $showDashboard = !empty($post['inp-show-dashboard']) ? 1 : 0;
-        $dtReagend  = !empty($post['inp-dt-reagend'])
-                        ? Functions::validateDate($post['inp-dt-reagend'], 'BR', 'EN')
-                        : null;
+        $dtReagend  = null;
+        if (!empty($post['inp-dt-reagend'])) {
+            $dtReagend = $this->converterDataAgenda($post['inp-dt-reagend']);
+            if (!$dtReagend) {
+                Functions::messages("msg", "Data de reagendamento inválida.", "danger");
+                return;
+            }
+        }
+
+        if ($idMensal <= 0) {
+            Functions::messages("msg", "Registro mensal inválido.", "danger");
+            return;
+        }
 
         if (!$dataEvento) {
             Functions::messages("msg", "Data do evento inválida.", "danger");
+            return;
+        }
+
+        if (!$tipo) {
+            Functions::messages("msg", "Selecione o tipo do evento.", "danger");
+            return;
+        }
+
+        if (!$descricao) {
+            Functions::messages("msg", "Informe a descrição do evento.", "danger");
             return;
         }
 
@@ -106,9 +187,15 @@ class GestaoAgenda {
     }
 
     public function deleteEvento($param) {
-        $id = $param[2];
-        DaoGestaoAgenda::deleteEvento($id);
-        Functions::messages("msg", "Evento removido.", "success");
+        $this->checkSession();
+        $id = isset($param[2]) ? (int)$param[2] : 0;
+        $sucesso = $id > 0 ? DaoGestaoAgenda::deleteEvento($id) : false;
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => (bool)$sucesso,
+            'mensagem' => $sucesso ? 'Evento removido.' : 'Não foi possível excluir o evento.'
+        ]);
     }
 
     public function updateEventoDashboard($param) {
@@ -206,13 +293,22 @@ class GestaoAgenda {
     // ----------------------------------------
 
     public function getEventosDashboard($param) {
-        $dataIni = $param[2] ?? date('Y-m-d');
-        $dataFim = $param[3] ?? $dataIni;
+        $dataIni = isset($param[2]) ? $param[2] : date('Y-m-d');
+        $dataFim = isset($param[3]) ? $param[3] : $dataIni;
         $incluirFixos = $dataIni === date('Y-m-d') && $dataFim === date('Y-m-d');
         $eventos = DaoGestaoAgenda::getEventosDashboard($dataIni, $dataFim, $incluirFixos);
         $v = new TGui("gestao_agenda_dashboard_eventos");
         $v->addData("eventos", $eventos);
         $v->renderize(APP_VIEW_LIST, true);
+    }
+
+    public function getAlertasOcorrencias() {
+        $this->checkSession();
+        $hoje = date('Y-m-d');
+        $amanha = date('Y-m-d', strtotime('+1 day'));
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(DaoGestaoAgenda::getAlertasOcorrencias($hoje, $amanha));
     }
 
     public function getDatasComEventos($param) {
@@ -238,6 +334,13 @@ class GestaoAgenda {
         $v->addData("dados", $agrupado);
         $v->addData("mes", $mes);
         $v->addData("ano", $ano);
+        $v->renderize(APP_VIEW_LIST, true);
+    }
+
+    public function getObservacoesDashboard() {
+        $observacoes = DaoGestaoAgenda::getObservacoesDashboard();
+        $v = new TGui("gestao_agenda_dashboard_observacoes");
+        $v->addData("observacoes", $observacoes);
         $v->renderize(APP_VIEW_LIST, true);
     }
 

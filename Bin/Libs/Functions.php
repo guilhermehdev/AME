@@ -149,7 +149,7 @@ class Functions {
     }
     
     public static function BRfullDateTime($data) {
-        $newdate .= date("d/m/Y", strtotime($data));
+        $newdate = date("d/m/Y", strtotime($data));
         $newdate .= "  às  ";
         $newdate .= date("H:i:s", strtotime($data));
         return $newdate;

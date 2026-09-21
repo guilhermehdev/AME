@@ -40,6 +40,140 @@ function carregarEventosDashboard(dataIni, dataFim, seletor, callback) {
     );
 }
 
+function atualizarProfissionaisAvisosDashboard() {
+    $('#profissionais-avisos-agenda').empty().hide();
+}
+
+function atualizarContagemConteudoCardsDashboard() {
+    $('.dashboard-evento-card').each(function () {
+        var $card = $(this);
+        var totalOcorrencias = parseInt($card.attr('data-total-ocorrencias'), 10) || 0;
+        var totalObservacoes = $card.find('.dashboard-observacao-agenda').length;
+        var totalAdicionais = Math.max(0, totalOcorrencias - 1) + totalObservacoes;
+        var $cabecalho = $card.find('.panel-heading').first();
+        var $badge = $cabecalho.find('.dashboard-evento-card-mais');
+
+        if (totalAdicionais > 0) {
+            if (!$badge.length) {
+                $badge = $('<span class="badge dashboard-evento-card-mais"></span>');
+                $badge.insertBefore($cabecalho.find('.dashboard-evento-expandir-icon').first());
+            }
+
+            $badge.text('+' + totalAdicionais)
+                .attr('title', totalAdicionais + ' itens além da prévia. Passe o mouse para expandir.');
+        } else {
+            $badge.remove();
+        }
+    });
+}
+
+function integrarObservacoesNosCardsDashboard() {
+    var $observacoes = $('#container-observacoes-agenda .dashboard-observacao-agenda, #observacoes-agenda-topo .dashboard-observacao-agenda, .dashboard-evento-card .dashboard-observacao-agenda');
+    var $topo = $('#observacoes-agenda-topo');
+
+    if (!$observacoes.length) {
+        $('.dashboard-observacoes-titulo').remove();
+        $topo.empty().hide();
+        $('#card-observacoes-agenda').hide();
+        return;
+    }
+
+    $observacoes.each(function () {
+        var $observacao = $(this);
+        var profissional = $observacao.attr('data-profissional-especialidade');
+        var $card = $('.dashboard-evento-card[data-profissional-especialidade]').filter(function () {
+            return $(this).attr('data-profissional-especialidade') === profissional;
+        }).first();
+
+        if ($card.length) {
+            var $panelBody = $card.find('.panel-body').first();
+            var $tituloObservacoes = $panelBody.find('.dashboard-observacoes-titulo').first();
+
+            if (!$tituloObservacoes.length) {
+                $tituloObservacoes = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
+                $tituloObservacoes.prependTo($panelBody);
+            }
+
+            $observacao.insertAfter($tituloObservacoes);
+        } else {
+            var $tituloTopo = $topo.find('.dashboard-observacoes-titulo').first();
+
+            if (!$tituloTopo.length) {
+                $tituloTopo = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
+                $tituloTopo.prependTo($topo);
+            }
+
+            $observacao.insertAfter($tituloTopo);
+        }
+    });
+
+    $topo.toggle($topo.find('.dashboard-observacao-agenda').length > 0);
+    $('#card-observacoes-agenda').hide();
+    atualizarContagemConteudoCardsDashboard();
+}
+
+function carregarAlertasOcorrencias() {
+    var $container = $('#alertas-ocorrencias-hoje');
+    if (!$container.length) return;
+
+    GLOBAL_URL = GLOBAL_URL || $('#URL').val();
+    $.getJSON(GLOBAL_URL + 'GestaoAgenda/getAlertasOcorrencias')
+        .done(function (eventos) {
+            var dispensados = {};
+            try {
+                dispensados = JSON.parse(localStorage.getItem('ame-alertas-ocorrencias-dispensados') || '{}');
+            } catch (e) {
+                dispensados = {};
+            }
+
+            var visiveis = $.grep(eventos || [], function (evento) {
+                return !dispensados[String(evento.id) + '-' + evento.data_evento];
+            });
+
+            if (!visiveis.length) {
+                $container.empty().hide();
+                return;
+            }
+
+            var html = '<div class="panel panel-danger" style="margin:0; border-color:#c9302c; box-shadow:0 2px 10px rgba(0,0,0,.2);">' +
+                '<div class="panel-heading" style="font-weight:bold; padding:9px 12px;">' +
+                '<span class="glyphicon glyphicon-bell"></span> Mensagem' +
+                '<button type="button" class="close btn-fechar-alertas-ocorrencias" aria-label="Fechar alerta" style="font-size:18px;">&times;</button>' +
+                '</div><div class="panel-body" style="padding:8px 10px;">';
+
+            $.each(visiveis, function (i, evento) {
+                var dataOcorrencia = String(evento.data_evento).split('-');
+                var dataBr = dataOcorrencia.length === 3
+                    ? dataOcorrencia[2] + '/' + dataOcorrencia[1] + '/' + dataOcorrencia[0]
+                    : evento.data_evento;
+                var amanha = evento.data_evento > formatarDataDashboard(new Date());
+                var medico = evento.nome_servidor || 'Sem profissional fixo';
+                var tiposOcorrencia = {
+                    AUSENCIA: 'Ausência',
+                    FOLGA: 'Folga',
+                    REAGENDAMENTO: 'Reagendamento',
+                    FERIAS: 'Férias',
+                    LICENCA: 'Licença',
+                    OUTRO: 'Outro'
+                };
+                var tipo = tiposOcorrencia[evento.tipo] || String(evento.tipo || '').replace(/_/g, ' ');
+
+                html += '<div class="alerta-ocorrencia-item" data-id="' + Number(evento.id) + '" data-data="' + $('<div>').text(evento.data_evento).html() + '" style="padding:8px 22px 8px 9px; margin-bottom:7px; position:relative; border-left:4px solid ' + (amanha ? '#f0ad4e' : '#d9534f') + '; background:#f9f9f9;">' +
+                    '<button type="button" class="close btn-dispensar-alerta-ocorrencia" title="Dispensar esta ocorrência" aria-label="Dispensar" style="position:absolute; top:4px; right:6px; font-size:16px;">&times;</button>' +
+                    '<div style="font-weight:bold; color:' + (amanha ? '#8a6d3b' : '#a94442') + ';">' + (amanha ? 'Amanhã' : 'Hoje') + ' — ' + dataBr + '</div>' +
+                    '<div style="font-weight:bold; margin-top:3px;">' + $('<div>').text(medico + ' - ' + evento.especialidade).html() + '</div>' +
+                    '<div><span class="label label-danger">' + $('<div>').text(tipo).html() + '</span> &gt; ' + $('<div>').text(evento.descricao || '').html() + '</div>' +
+                    '</div>';
+            });
+
+            html += '</div></div>';
+            $container.html(html).show();
+        })
+        .fail(function () {
+            // Falha silenciosa: o alerta não deve bloquear o uso do sistema.
+        });
+}
+
 function formatarDataDashboard(data) {
     return data.getFullYear() + '-' +
         String(data.getMonth() + 1).padStart(2, '0') + '-' +
@@ -194,6 +328,10 @@ $(document).on('click', '.btn-excluir-pdf-oci', function (e) {
 
 $(function () {
     GLOBAL_URL = GLOBAL_URL || $('#URL').val();
+    if ($('#alertas-ocorrencias-hoje').length) {
+        carregarAlertasOcorrencias();
+        window.setInterval(carregarAlertasOcorrencias, 60000);
+    }
     $.getJSON(GLOBAL_URL + 'GestaoAgenda/getDatasComEventos/' + new Date().getFullYear(), function (datas) {
         var datasComEvento = {};
         $.each(datas, function (i, data) {
@@ -225,6 +363,38 @@ $(function () {
         }));
     });
     $('#slct-mes-dashboard').val(anoDashboard + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-01');
+    $('#container-observacoes-agenda').load(
+        GLOBAL_URL + 'GestaoAgenda/getObservacoesDashboard',
+        function () {
+            integrarObservacoesNosCardsDashboard();
+            atualizarProfissionaisAvisosDashboard();
+        }
+    );
+    $(document).on('click', '.btn-dispensar-alerta-ocorrencia', function () {
+        var $item = $(this).closest('.alerta-ocorrencia-item');
+        var chave = String($item.data('id')) + '-' + $item.attr('data-data');
+        var dispensados = {};
+
+        try {
+            dispensados = JSON.parse(localStorage.getItem('ame-alertas-ocorrencias-dispensados') || '{}');
+            dispensados[chave] = true;
+            localStorage.setItem('ame-alertas-ocorrencias-dispensados', JSON.stringify(dispensados));
+        } catch (e) {
+            // Mantém a dispensa visual mesmo se o armazenamento local estiver indisponível.
+        }
+
+        $item.slideUp(150, function () {
+            $(this).remove();
+            if (!$('#alertas-ocorrencias-hoje .alerta-ocorrencia-item').length) {
+                $('#alertas-ocorrencias-hoje').fadeOut(150, function () { $(this).empty(); });
+            }
+        });
+    });
+    $(document).on('click', '.btn-fechar-alertas-ocorrencias', function () {
+        $('#alertas-ocorrencias-hoje .btn-dispensar-alerta-ocorrencia').each(function () {
+            $(this).trigger('click');
+        });
+    });
     $(document).on('change', '#slct-periodo-dashboard', function () {
         var porMes = $(this).val() === 'mes';
         $('#inp-data-dashboard').toggle(!porMes);
@@ -246,6 +416,142 @@ $(function () {
             $checkbox.prop('checked', !$checkbox.prop('checked'));
         });
     });
+    $(document).on('change', '.toggle-dashboard-mensal', function () {
+        var $checkbox = $(this);
+        var marcado = $checkbox.prop('checked');
+
+        $.post(
+            GLOBAL_URL + 'GestaoAgenda/updateMensalDashboard/' + $checkbox.data('id'),
+            {show_dashboard: marcado ? 1 : 0},
+            function (res) {
+                if (!res || !res.success) {
+                    $checkbox.prop('checked', !marcado);
+                }
+            },
+            'json'
+        ).fail(function () {
+            $checkbox.prop('checked', !marcado);
+            BootstrapDialog.alert({
+                cssClass: 'sm-dialog',
+                type: BootstrapDialog.TYPE_DANGER,
+                title: 'Não foi possível salvar',
+                message: 'Não foi possível atualizar a exibição da observação no dashboard.'
+            });
+        });
+    });
+    $(document).on('click', '.btn-excluir-mensal', function () {
+        var $botao = $(this);
+        var id = $botao.data('id');
+
+        BootstrapDialog.confirm({
+            cssClass: 'sm-dialog',
+            type: BootstrapDialog.TYPE_DANGER,
+            title: 'Excluir registro mensal',
+            message: 'Deseja excluir este registro mensal e todos os eventos vinculados a ele?',
+            draggable: true,
+            btnCancelLabel: 'Não',
+            btnOKLabel: 'Sim, excluir',
+            btnOKClass: 'btn-danger',
+            autodestroy: true,
+            callback: function (confirmado) {
+                if (!confirmado) return;
+
+                $botao.prop('disabled', true);
+                $.ajax({
+                    url: GLOBAL_URL + 'GestaoAgenda/deleteMensal/' + id,
+                    type: 'POST',
+                    dataType: 'json'
+                }).done(function (res) {
+                    if (!res || !res.success) {
+                        $botao.prop('disabled', false);
+                        BootstrapDialog.alert({
+                            cssClass: 'sm-dialog',
+                            type: BootstrapDialog.TYPE_DANGER,
+                            title: 'Exclusão não realizada',
+                            message: (res && res.mensagem) || 'Não foi possível excluir o registro mensal.'
+                        });
+                        return;
+                    }
+
+                    buscarHistoricoAgenda();
+                }).fail(function () {
+                    $botao.prop('disabled', false);
+                    BootstrapDialog.alert({
+                        cssClass: 'sm-dialog',
+                        type: BootstrapDialog.TYPE_DANGER,
+                        title: 'Exclusão não realizada',
+                        message: 'Ocorreu um erro ao excluir o registro mensal.'
+                    });
+                });
+            }
+        });
+    });
+    $(document).on('click', '.btn-excluir-evento', function () {
+        var $botao = $(this);
+        var id = parseInt($botao.attr('data-id'), 10);
+        var origem = $botao.attr('data-origem');
+        if (!id) return;
+
+        BootstrapDialog.confirm({
+            cssClass: 'sm-dialog',
+            type: BootstrapDialog.TYPE_DANGER,
+            title: 'Excluir evento',
+            message: 'Deseja excluir este evento da agenda?',
+            draggable: true,
+            btnCancelLabel: 'Não',
+            btnOKLabel: 'Sim, excluir',
+            btnOKClass: 'btn-danger',
+            autodestroy: true,
+            callback: function (confirmado) {
+                if (!confirmado) return;
+
+                $botao.prop('disabled', true);
+                $.ajax({
+                    url: GLOBAL_URL + 'GestaoAgenda/deleteEvento/' + id,
+                    type: 'GET',
+                    dataType: 'json'
+                }).done(function (res) {
+                    if (!res || !res.success) {
+                        $botao.prop('disabled', false);
+                        BootstrapDialog.alert({
+                            cssClass: 'sm-dialog',
+                            type: BootstrapDialog.TYPE_DANGER,
+                            title: 'Exclusão não realizada',
+                            message: (res && res.mensagem) || 'Não foi possível excluir o evento.'
+                        });
+                        return;
+                    }
+
+                    if (origem === 'todos') {
+                        $('[name=container-historico]').stop(true, true).fadeOut(100).load(
+                            GLOBAL_URL + 'GestaoAgenda/getTodosEventos',
+                            function () { $(this).fadeIn(100); }
+                        );
+                    } else if (origem === 'mensal') {
+                        recarregarMensalGestaoAgenda();
+                    } else {
+                        modoHistoricoAgenda = 'eventos';
+                        buscarHistoricoAgenda();
+                    }
+
+                    BootstrapDialog.alert({
+                        cssClass: 'sm-dialog',
+                        type: BootstrapDialog.TYPE_SUCCESS,
+                        title: 'Mensagem',
+                        message: res.mensagem || 'Evento removido.'
+                    });
+                }).fail(function () {
+                    $botao.prop('disabled', false);
+                    BootstrapDialog.alert({
+                        cssClass: 'sm-dialog',
+                        type: BootstrapDialog.TYPE_DANGER,
+                        title: 'Exclusão não realizada',
+                        message: 'Ocorreu um erro ao excluir o evento.'
+                    });
+                });
+            }
+        });
+    });
     $(document).on('click', '#btn-limpar-dashboard', function () {
         $('#container-eventos-periodo').html(
             '<p class="text-muted" style="padding:15px;">Selecione o período para consultar.</p>'
@@ -257,6 +563,8 @@ $(function () {
     var hojeTexto = formatarDataDashboard(hoje);
     carregarEventosDashboard(hojeTexto, hojeTexto, '#container-eventos-hoje', function () {
         $('#card-eventos-hoje').toggle($(this).find('.dashboard-eventos-cards').length > 0);
+        integrarObservacoesNosCardsDashboard();
+        atualizarProfissionaisAvisosDashboard();
     });
 
     var inicioProximaSemana = new Date(hoje);
@@ -273,6 +581,8 @@ $(function () {
         '#container-eventos-proxima-semana',
         function () {
             $('#card-eventos-proxima-semana').toggle($(this).find('.dashboard-eventos-cards').length > 0);
+            integrarObservacoesNosCardsDashboard();
+            atualizarProfissionaisAvisosDashboard();
         }
     );
 
@@ -2323,14 +2633,85 @@ function CartaoSus() {
 }
 
 //Gestao Agendas//
+function preencherCamposMensal() {
+    var idServidor = $('#slct-servidor-reg').val();
+    $('#frm-mensal #inp-id-espec').val($('#slct-espec-reg').val() || '');
+    $('#frm-mensal #inp-id-servidor').val(idServidor && idServidor !== 'null' ? idServidor : '');
+    $('#frm-mensal #inp-mes').val($('#slct-mes-reg').val() || '');
+    $('#frm-mensal #inp-ano').val($('#slct-ano-reg').val() || '');
+}
+
+function prepararFormularioMensal() {
+    preencherCamposMensal();
+    // Executa antes do handler global que serializa o formulário.
+    $('#frm-mensal #btn-save-mensal')
+        .off('click.gestaoAgendaMensal')
+        .on('click.gestaoAgendaMensal', preencherCamposMensal);
+}
+
+function prepararCalendariosGestaoAgenda() {
+    var mesSelecionado = parseInt($('#slct-mes-reg').val(), 10);
+    var anoSelecionado = parseInt($('#slct-ano-reg').val(), 10);
+    var dataInicial = (mesSelecionado >= 1 && mesSelecionado <= 12 && anoSelecionado > 0)
+        ? new Date(anoSelecionado, mesSelecionado - 1, 1)
+        : new Date();
+
+    $('#frm-evento .calendar').each(function () {
+        var $campo = $(this);
+        if (!$campo.data('datepicker')) {
+            $campo.datepicker({
+                format: 'dd/mm/yyyy',
+                todayHighlight: true,
+                autoclose: true,
+                showOnFocus: true,
+                language: 'pt-BR',
+                orientation: 'auto right',
+                defaultViewDate: dataInicial,
+                clearBtn: false,
+                todayBtn: 'linked',
+                daysOfWeekHighlighted: '0,6'
+            });
+        }
+    });
+}
+
+function recarregarMensalGestaoAgenda() {
+    var idEspec = $('#slct-espec-reg').val();
+    var idServidor = $('#slct-servidor-reg').val() || 'null';
+    var mes = $('#slct-mes-reg').val();
+    var ano = $('#slct-ano-reg').val();
+
+    if (!idEspec || !mes || !ano) return;
+
+    var url = GLOBAL_URL + 'GestaoAgenda/getMensal/' + idServidor + '/' + idEspec + '/' + mes + '/' + ano;
+    $('[name=container-registro-mensal]').stop(true, true).fadeOut(100).load(url, function () {
+        prepararFormularioMensal();
+        prepararCalendariosGestaoAgenda();
+        $(this).fadeIn(100);
+    });
+}
+
+function respostaGestaoAgendaFoiSucesso(resposta) {
+    try {
+        var dados = typeof resposta === 'string' ? $.parseJSON(resposta) : resposta;
+        return dados && dados.action === 'msg' && dados.typemsg === 'success';
+    } catch (e) {
+        return false;
+    }
+}
+
+$(document).on('formSaved.gestaoAgenda', '#frm-mensal', function () {
+    recarregarMensalGestaoAgenda();
+});
+
+$(document).on('formSaved.gestaoAgenda', '#frm-evento', function (event, resposta) {
+    if (respostaGestaoAgendaFoiSucesso(resposta)) {
+        recarregarMensalGestaoAgenda();
+    }
+});
+
 $(function () {
-//
-//    // Preenche os hidden fields com os valores dos selects da tela principal
-//    // (os selects ficam na gestao_agenda.php, fora desta partial)
-    $('#inp-id-espec').val($('#slct-espec-reg').val());
-    $('#inp-id-servidor').val($('#slct-servidor-reg').val() || '');
-    $('#inp-mes').val($('#slct-mes-reg').val());
-    $('#inp-ano').val($('#slct-ano-reg').val());
+    prepararFormularioMensal();
 //
 //    // Preview de faltas em tempo real
     function atualizarFaltas() {
@@ -2343,8 +2724,12 @@ $(function () {
 //
 //    // Mostra/oculta campo de reagendamento conforme tipo
     $(document).on('change', '#inp-tipo-evento', function () {
-        var exibe = $(this).val() === 'REAGENDAMENTO' || $(this).val() === 'AUSENCIA';
+        var tipo = $(this).val();
+        var exibe = tipo === 'REAGENDAMENTO' || tipo === 'AUSENCIA';
         $('#container-reagend').toggle(exibe);
+        $('#container-reagend label').text(
+            tipo === 'AUSENCIA' ? 'Data reagendamento' : 'Data reagendamento'
+        );
         if (!exibe) $('#inp-dt-reagend').val('');
     });
 //
@@ -2385,7 +2770,11 @@ $(document).off('click', '#btn-buscar-mensal').on('click', '#btn-buscar-mensal',
     var idEspec = $('#slct-espec-reg').val();
     if (!idEspec) { alert('Selecione a especialidade.'); return; }
     var url = GLOBAL_URL + 'GestaoAgenda/getMensal/' + ($('#slct-servidor-reg').val() || 'null') + '/' + idEspec + '/' + $('#slct-mes-reg').val() + '/' + $('#slct-ano-reg').val();
-    $('[name=container-registro-mensal]').stop(true, true).fadeOut(100).load(url, function () { $(this).fadeIn(100); });
+    $('[name=container-registro-mensal]').stop(true, true).fadeOut(100).load(url, function () {
+        prepararFormularioMensal();
+        prepararCalendariosGestaoAgenda();
+        $(this).fadeIn(100);
+    });
 });
 
 var modoHistoricoAgenda = 'registros';
@@ -2456,7 +2845,11 @@ $(document).on('change', '#slct-espec-reg', function () {
         $('[name=container-registro-mensal]').fadeOut(100, function () {
             $('[name=container-registro-mensal]').load(
                 GLOBAL_URL + 'GestaoAgenda/getMensal/' + idServidor + '/' + idEspec + '/' + mes + '/' + ano,
-                function () { $('[name=container-registro-mensal]').fadeIn(100); }
+                function () {
+                    prepararFormularioMensal();
+                    prepararCalendariosGestaoAgenda();
+                    $('[name=container-registro-mensal]').fadeIn(100);
+                }
             );
         });
     });

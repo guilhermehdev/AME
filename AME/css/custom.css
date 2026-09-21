@@ -315,6 +315,10 @@ label-dark {
  {
      color: #ccc;
  }
+
+.small.text-dark-orange {
+    color: #FF8C00;
+}
  
  .small-button{
      width: 15px;
@@ -354,4 +358,8 @@ label-dark {
  .table-fila-oci td{
     border: 1px solid #ccc;   
     padding: 4px; 
+ }
+ 
+ #container-observacoes-agenda{
+     margin-top: 11px;
  }

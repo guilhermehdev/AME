@@ -68,8 +68,43 @@ class DaoGestaoAgenda {
     }
 
     public static function deleteMensal($id) {
-        $sql = "DELETE FROM agenda_mensal WHERE id = :ID";
-        return Maincontroller::doQuery($sql, ['ID' => $id]);
+        $conn = Conn::getConn();
+
+        try {
+            $conn->beginTransaction();
+
+            // Eventos pertencem ao registro mensal; removemos ambos de forma atômica.
+            $stmtEventos = $conn->prepare("DELETE FROM agenda_eventos WHERE id_mensal = :ID");
+            $stmtEventos->bindValue(':ID', (int)$id, PDO::PARAM_INT);
+            $stmtEventos->execute();
+
+            $stmtMensal = $conn->prepare("DELETE FROM agenda_mensal WHERE id = :ID");
+            $stmtMensal->bindValue(':ID', (int)$id, PDO::PARAM_INT);
+            $stmtMensal->execute();
+
+            if ($stmtMensal->rowCount() < 1) {
+                $conn->rollBack();
+                return false;
+            }
+
+            $conn->commit();
+            return true;
+        } catch (Exception $ex) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            return false;
+        }
+    }
+
+    public static function updateMensalDashboard($id, $showDashboard) {
+        $sql = "UPDATE agenda_mensal
+                SET show_dashboard = :SHOWDASHBOARD
+                WHERE id = :ID";
+        return Maincontroller::doQuery($sql, [
+            'ID' => (int)$id,
+            'SHOWDASHBOARD' => (int)$showDashboard
+        ]);
     }
 
     // ----------------------------------------
@@ -147,6 +182,7 @@ class DaoGestaoAgenda {
 
         $sql = "SELECT am.id, am.mes, am.ano,
                        am.vagas_ofertadas, am.presentes, am.faltas, am.observacao,
+                       am.show_dashboard, am.criado_em,
                        s.nome AS nome_servidor,
                        e.especialidade,
                        COUNT(ae.id) AS total_eventos
@@ -216,10 +252,10 @@ class DaoGestaoAgenda {
                        am.vagas_ame,
                        am.vagas_reg,
                        am.vagas_ofertadas,
-                       am.presentes,
-                       am.faltas,
-                       am.observacao,
-                       ROUND(am.faltas / NULLIF(am.vagas_ofertadas, 0) * 100, 1) AS pct_faltas,
+                        am.presentes,
+                        am.faltas,
+                        am.observacao,
+                        ROUND(am.faltas / NULLIF(am.vagas_ofertadas, 0) * 100, 1) AS pct_faltas,
                        COUNT(ae.id) AS total_eventos
                 FROM agenda_mensal am
                 LEFT JOIN servidores s ON s.id = am.id_servidor
@@ -239,7 +275,7 @@ class DaoGestaoAgenda {
     // ----------------------------------------
 
     public static function getEventosDashboard($dataIni, $dataFim, $incluirFixos = false) {
-        $sql = "SELECT ae.*, s.nome AS nome_servidor, e.especialidade
+        $sql = "SELECT ae.*, s.id AS id_servidor, s.nome AS nome_servidor, e.especialidade
                 FROM agenda_eventos ae
                 INNER JOIN agenda_mensal am ON am.id = ae.id_mensal
                 LEFT JOIN servidores s ON s.id = am.id_servidor
@@ -249,6 +285,21 @@ class DaoGestaoAgenda {
             $sql .= " OR ae.show_dashboard = 1";
         }
         $sql .= ")
+                ORDER BY ae.data_evento ASC, e.especialidade, s.nome";
+        $ds = Maincontroller::doQuery($sql, ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim]);
+        $arr = [];
+        while ($row = $ds->fetch(PDO::FETCH_ASSOC)) $arr[] = $row;
+        return $arr;
+    }
+
+    public static function getAlertasOcorrencias($dataIni, $dataFim) {
+        $sql = "SELECT ae.id, ae.data_evento, ae.tipo, ae.descricao,
+                       s.nome AS nome_servidor, e.especialidade
+                FROM agenda_eventos ae
+                INNER JOIN agenda_mensal am ON am.id = ae.id_mensal
+                LEFT JOIN servidores s ON s.id = am.id_servidor
+                INNER JOIN especs e ON e.id = am.id_espec
+                WHERE ae.data_evento BETWEEN :DATAINI AND :DATAFIM
                 ORDER BY ae.data_evento ASC, e.especialidade, s.nome";
         $ds = Maincontroller::doQuery($sql, ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim]);
         $arr = [];
@@ -275,6 +326,7 @@ class DaoGestaoAgenda {
                        am.presentes,
                        am.faltas,
                        am.observacao,
+                       am.show_dashboard,
                        ROUND(am.presentes / NULLIF(am.vagas_ofertadas, 0) * 100, 0) AS pct_aproveit,
                        COUNT(ae.id) AS total_eventos
                 FROM agenda_dashboard_config dc
@@ -287,6 +339,23 @@ class DaoGestaoAgenda {
                 GROUP BY am.id
                 ORDER BY dc.ordem, e.especialidade, s.nome";
         $ds = Maincontroller::doQuery($sql, ['MES' => $mes, 'ANO' => $ano]);
+        $arr = [];
+        while ($row = $ds->fetch(PDO::FETCH_ASSOC)) $arr[] = $row;
+        return $arr;
+    }
+
+    public static function getObservacoesDashboard() {
+        $sql = "SELECT am.mes, am.ano, am.observacao, am.criado_em,
+                       s.nome AS nome_servidor,
+                       e.especialidade
+                FROM agenda_mensal am
+                LEFT JOIN servidores s ON s.id = am.id_servidor
+                INNER JOIN especs e ON e.id = am.id_espec
+                WHERE am.show_dashboard = 1
+                  AND am.observacao IS NOT NULL
+                  AND TRIM(am.observacao) <> ''
+                ORDER BY am.ano DESC, am.mes DESC, e.especialidade, s.nome";
+        $ds = Maincontroller::doQuery($sql);
         $arr = [];
         while ($row = $ds->fetch(PDO::FETCH_ASSOC)) $arr[] = $row;
         return $arr;

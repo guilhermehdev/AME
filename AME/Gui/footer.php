@@ -6,6 +6,8 @@ echo
 </div>
 </div>
 
+            <div id=\"alertas-ocorrencias-hoje\" aria-live=\"polite\" aria-atomic=\"false\" style=\"display:none; position:fixed; right:18px; bottom:18px; width:360px; max-width:calc(100vw - 36px); max-height:55vh; overflow-y:auto; z-index:1040;\"></div>
+
         <div class=\"loading-modal\" style=\"background: rgba( 51, 51, 51, 0.0 ) url(".URL_ROOT."img/Spin.png) 50% 50% no-repeat;\">
         </div>
 

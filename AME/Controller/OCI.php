@@ -133,9 +133,11 @@ class OCI {
             return;
         }
 
-        $nomeOriginal = basename($arquivoUpload['name']);
-        if (strtolower(pathinfo($nomeOriginal, PATHINFO_EXTENSION)) !== 'pdf' ||
-            !preg_match('/^[^\\\/]+\.pdf$/i', $nomeOriginal)) {
+        $nomeRecebido = isset($arquivoUpload['name'])
+            ? str_replace('\\', '/', $arquivoUpload['name'])
+            : '';
+        $nomeOriginal = basename($nomeRecebido);
+        if ($nomeOriginal === '' || strtolower(pathinfo($nomeOriginal, PATHINFO_EXTENSION)) !== 'pdf') {
             http_response_code(422);
             echo json_encode(array('erro' => true, 'mensagem' => 'O arquivo enviado precisa ser um PDF válido.'));
             return;

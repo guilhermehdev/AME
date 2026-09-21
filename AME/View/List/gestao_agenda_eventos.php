@@ -4,7 +4,7 @@ $eventos = $this->getData('eventos');
 
 $tiposEvento = [
     'AUSENCIA'      => 'Ausência',
-    'ATRASO'        => 'Atraso',
+    'FOLGA'         => 'Folga',
     'REAGENDAMENTO' => 'Reagendamento',
     'FERIAS'        => 'Férias',
     'LICENCA'       => 'Licença',
@@ -13,7 +13,7 @@ $tiposEvento = [
 
 $tipoLabel = [
     'AUSENCIA'      => 'danger',
-    'ATRASO'        => 'warning',
+    'FOLGA'         => 'warning',
     'REAGENDAMENTO' => 'info',
     'FERIAS'        => 'primary',
     'LICENCA'       => 'default',
@@ -33,6 +33,7 @@ echo "<table class=\"table table-condensed table-hover table-bordered mrg-top\">
             <th>Profissional</th>
             <th>Tipo</th>
             <th>Descrição</th>
+            <th>Criado em</th>
             <th>Reagendado para</th>
             <th>Dashboard</th>
             <th>Ações</th>
@@ -42,9 +43,10 @@ echo "<table class=\"table table-condensed table-hover table-bordered mrg-top\">
 
 foreach ($eventos as $ev) {
     $tipo      = $ev['tipo'];
-    $labelCls  = $tipoLabel[$tipo]  ?? 'default';
-    $tipoNome  = $tiposEvento[$tipo] ?? $tipo;
+    $labelCls  = isset($tipoLabel[$tipo]) ? $tipoLabel[$tipo] : 'default';
+    $tipoNome  = isset($tiposEvento[$tipo]) ? $tiposEvento[$tipo] : $tipo;
     $dataEv    = Functions::BRdateFormat($ev['data_evento']);
+    $criadoEm  = !empty($ev['criado_em']) ? Functions::BRfullDateTime($ev['criado_em']) : '—';
     $dtReagend = $ev['dt_reagend'] ? Functions::BRdateFormat($ev['dt_reagend']) : '—';
     $prof      = $ev['nome_servidor'] ?: '<span class="text-muted">—</span>';
 
@@ -54,6 +56,7 @@ foreach ($eventos as $ev) {
             <td>{$prof}</td>
             <td><span class=\"label label-{$labelCls}\">{$tipoNome}</span></td>
             <td>" . htmlspecialchars($ev['descricao']) . "</td>
+            <td><small>{$criadoEm}</small></td>
             <td>{$dtReagend}</td>
             <td class=\"text-center\">
                 <input type=\"checkbox\" class=\"toggle-dashboard-evento\"
@@ -61,12 +64,8 @@ foreach ($eventos as $ev) {
                        " . (!empty($ev['show_dashboard']) ? 'checked' : '') . ">
             </td>
             <td>
-                <button type=\"button\" class=\"btn btn-danger btn-xs call-data\"
-                        href=\"GestaoAgenda/deleteEvento\"
-                        data-params='{\"id\":\"{$ev['id']}\"}'
-                        data-redirect=\"load\"
-                        data-redirect-target=\"container-historico\"
-                        data-redirect-url=\"GestaoAgenda/getEventosHistorico\">
+                <button type=\"button\" class=\"btn btn-danger btn-xs btn-excluir-evento\"
+                        data-id=\"{$ev['id']}\" data-origem=\"historico\" title=\"Excluir evento\">
                     <span class=\"glyphicon glyphicon-trash\"></span>
                 </button>
             </td>

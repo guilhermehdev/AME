@@ -38,7 +38,7 @@ foreach ($dados as $espec => $profissionais) {
 
         // Observação
         $obs = '';
-        if ($p['observacao']) {
+        if (!empty($p['show_dashboard']) && $p['observacao']) {
             $obs = " <small class=\"text-muted\">— " . htmlspecialchars($p['observacao']) . "</small>";
         }
 

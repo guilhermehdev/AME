@@ -395,6 +395,9 @@ function submit(formdata, action, clearFields = false, form = null) {
     success: function (result) {
       console.log(result);
         messagesHandler(result);
+      if (form && form.length) {
+        $(form).trigger('formSaved', [result]);
+      }
     },
     error: function (XMLHttpRequest, textStatus, errorThrown) {
     handleMSG(XMLHttpRequest.responseText + ' - ' +textStatus+' - '+ errorThrown, 'danger');
@@ -1195,7 +1198,9 @@ $(document).on('changeDate', 'input', function (event) {
 
   //$(input).closest('div').find('button').addClass('btn btn-danger');
 
-  $(input.val(validateData(data, 'EN', 'EN')));
+  // O datepicker está configurado em dd/mm/yyyy; mantenha esse formato
+  // para os formulários PHP que fazem a conversão no servidor.
+  $(input.val(validateData(data, 'BR', 'BR')));
 
   if (input.hasClass('dinamic-btn')) {
     $(input).closest('div').find('button').addClass('btn btn-danger');
