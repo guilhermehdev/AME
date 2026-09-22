@@ -130,7 +130,7 @@ function obterLinhaCardsObservacoesDashboard($container) {
     if (!$linha.length) {
         $linha = $container.find('.dashboard-observacoes-cards').first();
         if (!$linha.length) {
-            $linha = $('<div class="row dashboard-eventos-cards dashboard-observacoes-cards" style="margin-right:-8px; margin-left:-8px;"></div>');
+            $linha = $('<div class="row dashboard-eventos-cards dashboard-observacoes-cards" style="margin-right:5px; margin-left:-5px;"></div>');
             $container.append($linha);
         }
     }
@@ -232,6 +232,10 @@ function integrarObservacoesNosCardsDashboard() {
     });
     $('.dashboard-observacoes-cards').each(function () {
         if (!$(this).find('.dashboard-evento-card').length) $(this).remove();
+    });
+
+    $('.dashboard-eventos-cards').each(function () {
+        organizarColunasCardsDashboard($(this));
     });
 
     $topo.toggle($topo.find('.dashboard-evento-card-observacao-only').length > 0);

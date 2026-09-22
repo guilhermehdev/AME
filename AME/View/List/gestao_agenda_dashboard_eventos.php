@@ -14,7 +14,7 @@ if (empty($eventos)) {
     return;
 }
 
-echo '<div class="row dashboard-eventos-cards" style="margin-right:-8px; margin-left:-8px;">';
+echo '<div class="row dashboard-eventos-cards" style="margin-right:5px; margin-left:-5px;">';
 $cardsDashboard = array();
 // Agrupa primeiro por profissional + especialidade e, dentro do card,
 // organiza os eventos por data.
