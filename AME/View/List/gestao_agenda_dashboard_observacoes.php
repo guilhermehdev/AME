@@ -14,6 +14,8 @@ $meses = [
 foreach ($observacoes as $item) {
     $especialidadeOriginal = $item['especialidade'];
     $profissionalOriginal = $item['nome_servidor'] ? $item['nome_servidor'] : 'Sem profissional fixo';
+    $idServidor = isset($item['id_servidor']) ? (int)$item['id_servidor'] : 0;
+    $idEspec = isset($item['id_espec']) ? (int)$item['id_espec'] : 0;
     $especialidade = htmlspecialchars($especialidadeOriginal, ENT_QUOTES, 'UTF-8');
     $profissional = htmlspecialchars($profissionalOriginal, ENT_QUOTES, 'UTF-8');
     $tituloAviso = htmlspecialchars($profissionalOriginal . ' - ' . $especialidadeOriginal, ENT_QUOTES, 'UTF-8');
@@ -21,7 +23,7 @@ foreach ($observacoes as $item) {
     $texto = nl2br(htmlspecialchars($item['observacao'], ENT_QUOTES, 'UTF-8'));
     $criadoEm = !empty($item['criado_em']) ? Functions::BRfullDateTime($item['criado_em']) : 'Data não registrada';
 
-    echo "<div class=\"dashboard-observacao-agenda alert alert-warning\" data-profissional-especialidade=\"{$tituloAviso}\" style=\"margin-bottom:8px;\">
+    echo "<div class=\"dashboard-observacao-agenda alert alert-warning\" data-profissional-especialidade=\"{$tituloAviso}\" data-id-servidor=\"{$idServidor}\" data-id-espec=\"{$idEspec}\" style=\"margin-bottom:8px;\">
             <small class=\"text-muted\">(Ref. Agenda {$mesAno})</small>
             <div style=\"color:#5b2a86; font-weight:600;\">{$texto}</div>
             <small class=\"text-muted\">Criado em: {$criadoEm}</small>

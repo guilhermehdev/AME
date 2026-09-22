@@ -88,6 +88,7 @@ class GestaoAgenda {
         $vagasReg   = isset($post['inp-vagas-reg'])  ? $post['inp-vagas-reg']  : 0;
         $presentes  = isset($post['inp-presentes'])  ? $post['inp-presentes']  : 0;
         $obs        = isset($post['inp-observacao']) ? $post['inp-observacao'] : null;
+        $showDashboard = !empty($post['inp-show-dashboard']) ? 1 : 0;
 
         if ($idEspec <= 0 || $mes < 1 || $mes > 12 || $ano <= 0) {
             Functions::messages("msg", "Especialidade, mês ou ano inválido. Selecione o período novamente e tente salvar.", "danger");
@@ -96,7 +97,7 @@ class GestaoAgenda {
 
         $res = DaoGestaoAgenda::saveMensal(
             $idServidor, $idEspec, $mes, $ano,
-            $vagasAme, $vagasReg, $presentes, $obs
+            $vagasAme, $vagasReg, $presentes, $obs, $showDashboard
         );
 
         if ($res) {

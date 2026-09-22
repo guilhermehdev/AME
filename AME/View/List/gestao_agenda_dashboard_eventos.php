@@ -15,13 +15,18 @@ if (empty($eventos)) {
 }
 
 echo '<div class="row dashboard-eventos-cards" style="margin-right:-8px; margin-left:-8px;">';
+$cardsDashboard = array();
 // Agrupa primeiro por profissional + especialidade e, dentro do card,
 // organiza os eventos por data.
 $grupos = array();
 foreach ($eventos as $ev) {
-    $chave = (string)$ev['id_servidor'] . '|' . $ev['especialidade'];
+    $idServidor = isset($ev['id_servidor']) ? (int)$ev['id_servidor'] : 0;
+    $idEspec = isset($ev['id_espec']) ? (int)$ev['id_espec'] : 0;
+    $chave = $idServidor . '|' . $idEspec;
     if (!isset($grupos[$chave])) {
         $grupos[$chave] = array(
+            'id_servidor' => $idServidor,
+            'id_espec' => $idEspec,
             'nome_servidor' => $ev['nome_servidor'],
             'especialidade' => $ev['especialidade'],
             'datas' => array()
@@ -86,10 +91,10 @@ foreach ($grupos as $grupo) {
             </div>';
     }
 
-    echo '<div class="col-sm-6 col-md-4">
-        <div class="panel panel-default dashboard-evento-card" data-profissional-especialidade="' . $titulo . '" data-total-ocorrencias="' . $totalEventosGrupo . '" style="border:1px solid #ccc;">
+    $cardsDashboard[] = '<div class="col-sm-6 col-md-4">
+        <div class="panel panel-default dashboard-evento-card" data-profissional-especialidade="' . $titulo . '" data-id-servidor="' . $grupo['id_servidor'] . '" data-id-espec="' . $grupo['id_espec'] . '" data-total-ocorrencias="' . $totalEventosGrupo . '" style="border:1px solid #ccc;">
             <div class="panel-heading" style="padding:8px 12px; color:#337ab7; font-weight:bold;">
-                <span style="font-size:13px;">' . $titulo . '</span>
+                <span style="font-size:11px;">' . $titulo . '</span>
                 ' . $preview . '
                 ' . $badgeAdicionais . '
                 <span class="glyphicon glyphicon-chevron-down dashboard-evento-expandir-icon"
@@ -100,5 +105,16 @@ foreach ($grupos as $grupo) {
             </div>
         </div>
     </div>';
+}
+
+// Mantém uma estrutura de colunas desde o HTML inicial. Assim, a expansão de
+// um card não altera a posição dos cards que estão na coluna ao lado.
+$quantidadeColunasDashboard = 3;
+for ($coluna = 0; $coluna < $quantidadeColunasDashboard; $coluna++) {
+    echo '<div class="dashboard-eventos-coluna">';
+    for ($indiceCard = $coluna; $indiceCard < count($cardsDashboard); $indiceCard += $quantidadeColunasDashboard) {
+        echo $cardsDashboard[$indiceCard];
+    }
+    echo '</div>';
 }
 echo '</div>';

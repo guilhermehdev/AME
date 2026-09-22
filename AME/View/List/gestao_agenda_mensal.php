@@ -35,6 +35,7 @@ $vagasOfertadas  = $mensal ? $mensal['vagas_ofertadas']  : 0;
 $presentes       = $mensal ? $mensal['presentes']        : 0;
 $faltas          = $mensal ? $mensal['faltas']           : 0;
 $obs             = $mensal ? $mensal['observacao']       : '';
+$dashboardMarcadoMensal = $mensal && !empty($mensal['show_dashboard']) ? 'checked' : '';
 $nomeProfissional = $mensal ? (isset($mensal['nome_servidor']) ? $mensal['nome_servidor'] : 'Sem profissional fixo') : '';
 $nomeEspec       = $mensal ? $mensal['especialidade']   : '';
 $mesNome         = $mensal ? ($meses[(int)$mensal['mes']] . '/' . $mensal['ano']) : '';
@@ -104,6 +105,15 @@ echo "<form class=\"form-horizontal\" method=\"POST\"
         <label>Observação</label>
         <textarea class=\"form-control\" name=\"inp-observacao\" id=\"inp-observacao\"
                   rows=\"2\" placeholder=\"Ex: Férias, Licença Prêmio...\">" . htmlspecialchars($obs) . "</textarea>
+    </div>
+
+    <div class=\"col-sm-12 mrg-bottom\">
+        <input type=\"hidden\" name=\"inp-show-dashboard\" value=\"0\">
+        <label style=\"font-weight:normal;\">
+            <input type=\"checkbox\" name=\"inp-show-dashboard\" id=\"inp-show-dashboard-mensal\"
+                   value=\"1\" {$dashboardMarcadoMensal}>
+            Exibir observação no dashboard
+        </label>
     </div>
 
     <div class=\"col-sm-12 mrg-bottom\">

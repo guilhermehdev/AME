@@ -985,6 +985,58 @@ table .header-danger {
     width: 100%;
 }
 
+/* Colunas independentes: a expansão de um card só empurra os cards abaixo
+   dele na mesma coluna. */
+.dashboard-eventos-cards {
+    display: flex;
+    align-items: flex-start;
+}
+
+.dashboard-eventos-cards::before,
+.dashboard-eventos-cards::after {
+    display: none;
+    content: none;
+}
+
+.dashboard-eventos-coluna {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-right: 8px;
+    padding-left: 8px;
+}
+
+.dashboard-eventos-coluna > [class*="col-"],
+.dashboard-eventos-coluna > .dashboard-observacao-coluna {
+    float: none;
+    width: auto;
+    padding-right: 0;
+    padding-left: 0;
+    margin-bottom: 16px;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .dashboard-eventos-cards {
+        flex-wrap: wrap;
+    }
+
+    .dashboard-eventos-coluna {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 767px) {
+    .dashboard-eventos-cards {
+        display: block;
+    }
+
+    .dashboard-eventos-coluna {
+        width: 100%;
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+}
+
 /* No desktop, mantém os cards compactos até o usuário passar o mouse. */
 @media (hover: hover) and (pointer: fine) {
     .dashboard-evento-card {

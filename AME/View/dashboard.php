@@ -11,14 +11,14 @@ if(AppController::checkSession()){
 echo 
 "<div class=\"col-sm-12\">
     <div class=\"page-header\" style=\"padding-bottom:0;\">
-        <h1>{$title} - <small>{$hoje}</small></h1>
+        <h1> <small>{$hoje}</small></h1>
     </div>          
   
     <!-- Card: Gestão de Agendas -->
     <div class=\"col-sm-12 mrg-top\">
         <fieldset class=\"for-panel\">
             <legend class=\"text-primary\">
-                <span class=\"glyphicon glyphicon-star-empty\"></span> Avisos 
+                <span class=\"glyphicon glyphicon-star-empty\"></span> Painel de avisos
             </legend>
             <div id=\"profissionais-avisos-agenda\" style=\"display:none; margin:0 0 10px 5px; color:#337ab7; font-weight:bold;\"></div>
                 <div class=\"row\" style=\"margin-left: -5px;\">
@@ -29,9 +29,6 @@ echo
                             <div id=\"container-observacoes-agenda\" name=\"container-observacoes-agenda\"></div>
                         </div>
 
-                        <div class=\"small text-dark\" style=\"margin-bottom:6px;\">
-                            <span class=\"glyphicon glyphicon-calendar\"></span> Ocorrências
-                        </div>
                         <div id=\"observacoes-agenda-topo\"></div>
                         <div id=\"card-eventos-hoje\">
                             <div id=\"container-eventos-hoje\" name=\"container-eventos-hoje\">

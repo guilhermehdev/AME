@@ -53,18 +53,19 @@ class DaoGestaoAgenda {
         return $row ?: null;
     }
 
-    public static function saveMensal($idServidor, $idEspec, $mes, $ano, $vagasAme, $vagasReg, $presentes, $obs) {
+    public static function saveMensal($idServidor, $idEspec, $mes, $ano, $vagasAme, $vagasReg, $presentes, $obs, $showDashboard = 0) {
         // Upsert: insere ou atualiza se já existir
         $sql = "INSERT INTO agenda_mensal
-                  (id_servidor, id_espec, mes, ano, vagas_ame, vagas_reg, presentes, observacao)
+                  (id_servidor, id_espec, mes, ano, vagas_ame, vagas_reg, presentes, observacao, show_dashboard)
                 VALUES
-                  (:IDSERV, :IDESPEC, :MES, :ANO, :AME, :REG, :PRES, :OBS)
+                  (:IDSERV, :IDESPEC, :MES, :ANO, :AME, :REG, :PRES, :OBS, :SHOWDASHBOARD)
                 ON DUPLICATE KEY UPDATE
                   vagas_ame   = VALUES(vagas_ame),
                   vagas_reg   = VALUES(vagas_reg),
                   presentes   = VALUES(presentes),
-                  observacao  = VALUES(observacao)";
-        return Maincontroller::doQuery($sql, ['IDSERV'  => $idServidor ?: null, 'IDESPEC' => $idEspec, 'MES'     => $mes, 'ANO'     => $ano, 'AME'     => (int)$vagasAme,   'REG'     => (int)$vagasReg, 'PRES'    => (int)$presentes, 'OBS'     => $obs ?: null, ]);
+                  observacao  = VALUES(observacao),
+                  show_dashboard = VALUES(show_dashboard)";
+        return Maincontroller::doQuery($sql, ['IDSERV'  => $idServidor ?: null, 'IDESPEC' => $idEspec, 'MES'     => $mes, 'ANO'     => $ano, 'AME'     => (int)$vagasAme,   'REG'     => (int)$vagasReg, 'PRES'    => (int)$presentes, 'OBS'     => $obs ?: null, 'SHOWDASHBOARD' => (int)$showDashboard]);
     }
 
     public static function deleteMensal($id) {
@@ -275,7 +276,8 @@ class DaoGestaoAgenda {
     // ----------------------------------------
 
     public static function getEventosDashboard($dataIni, $dataFim, $incluirFixos = false) {
-        $sql = "SELECT ae.*, s.id AS id_servidor, s.nome AS nome_servidor, e.especialidade
+        $sql = "SELECT ae.*, am.id_servidor, am.id_espec,
+                       s.nome AS nome_servidor, e.especialidade
                 FROM agenda_eventos ae
                 INNER JOIN agenda_mensal am ON am.id = ae.id_mensal
                 LEFT JOIN servidores s ON s.id = am.id_servidor
@@ -345,7 +347,8 @@ class DaoGestaoAgenda {
     }
 
     public static function getObservacoesDashboard() {
-        $sql = "SELECT am.mes, am.ano, am.observacao, am.criado_em,
+        $sql = "SELECT am.id_servidor, am.id_espec, am.mes, am.ano,
+                       am.observacao, am.criado_em,
                        s.nome AS nome_servidor,
                        e.especialidade
                 FROM agenda_mensal am

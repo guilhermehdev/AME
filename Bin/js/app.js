@@ -35,9 +35,61 @@ $(document).ready(function () {
 function carregarEventosDashboard(dataIni, dataFim, seletor, callback) {
     $(seletor).load(GLOBAL_URL + 'GestaoAgenda/getEventosDashboard/' + dataIni + '/' + dataFim,
         function (response, status) {
+            $(this).find('.dashboard-eventos-cards').each(function () {
+                organizarColunasCardsDashboard($(this));
+            });
             if (typeof callback === 'function') callback.call(this, response, status);
         }
     );
+}
+
+function quantidadeColunasCardsDashboard() {
+    if (window.innerWidth >= 992) return 3;
+    if (window.innerWidth >= 768) return 2;
+    return 1;
+}
+
+function organizarColunasCardsDashboard($linha) {
+    if (!$linha || !$linha.length) return;
+
+    var $itens = $linha.children('[class*="col-"]');
+    $linha.children('.dashboard-eventos-coluna').children().each(function () {
+        $itens = $itens.add(this);
+    });
+
+    if (!$itens.length) return;
+
+    $linha.children().detach();
+
+    var quantidade = Math.min(quantidadeColunasCardsDashboard(), $itens.length);
+    var $colunas = $();
+    for (var i = 0; i < quantidade; i++) {
+        var $coluna = $('<div class="dashboard-eventos-coluna"></div>');
+        $linha.append($coluna);
+        $colunas = $colunas.add($coluna);
+    }
+
+    $itens.each(function (indice) {
+        $colunas.eq(indice % quantidade).append(this);
+    });
+}
+
+function inserirColunaCardDashboard($linha, $item) {
+    organizarColunasCardsDashboard($linha);
+
+    var $colunas = $linha.children('.dashboard-eventos-coluna');
+    if (!$colunas.length) {
+        $linha.append($('<div class="dashboard-eventos-coluna"></div>'));
+        $colunas = $linha.children('.dashboard-eventos-coluna');
+    }
+
+    var $destino = $colunas.first();
+    $colunas.each(function () {
+        if ($(this).children().length < $destino.children().length) {
+            $destino = $(this);
+        }
+    });
+    $destino.append($item);
 }
 
 function atualizarProfissionaisAvisosDashboard() {
@@ -49,7 +101,9 @@ function atualizarContagemConteudoCardsDashboard() {
         var $card = $(this);
         var totalOcorrencias = parseInt($card.attr('data-total-ocorrencias'), 10) || 0;
         var totalObservacoes = $card.find('.dashboard-observacao-agenda').length;
-        var totalAdicionais = Math.max(0, totalOcorrencias - 1) + totalObservacoes;
+        var cardSoObservacao = $card.hasClass('dashboard-evento-card-observacao-only');
+        var totalAdicionais = Math.max(0, totalOcorrencias - (cardSoObservacao ? 0 : 1)) +
+            Math.max(0, totalObservacoes - (cardSoObservacao ? 1 : 0));
         var $cabecalho = $card.find('.panel-heading').first();
         var $badge = $cabecalho.find('.dashboard-evento-card-mais');
 
@@ -67,6 +121,65 @@ function atualizarContagemConteudoCardsDashboard() {
     });
 }
 
+function obterLinhaCardsObservacoesDashboard($container) {
+    var $linha = $('#container-eventos-hoje .dashboard-eventos-cards').first();
+    if (!$linha.length) {
+        $linha = $('#container-eventos-proxima-semana .dashboard-eventos-cards').first();
+    }
+
+    if (!$linha.length) {
+        $linha = $container.find('.dashboard-observacoes-cards').first();
+        if (!$linha.length) {
+            $linha = $('<div class="row dashboard-eventos-cards dashboard-observacoes-cards" style="margin-right:-8px; margin-left:-8px;"></div>');
+            $container.append($linha);
+        }
+    }
+
+    return $linha;
+}
+
+function criarCardObservacaoSemOcorrencia(profissional, idServidor, idEspec, $observacao, $container) {
+    var $linha = obterLinhaCardsObservacoesDashboard($container);
+    var $cardColuna = $('.dashboard-evento-card-observacao-only').filter(function () {
+        var $cardExistente = $(this);
+        if (idServidor !== null && idEspec !== null) {
+            return String($cardExistente.attr('data-id-servidor')) === String(idServidor) &&
+                String($cardExistente.attr('data-id-espec')) === String(idEspec);
+        }
+        return $cardExistente.attr('data-profissional-especialidade') === profissional;
+    }).closest('.dashboard-observacao-coluna').first();
+    if ($cardColuna.length) {
+        if (!$cardColuna.parent().is($linha)) $linha.append($cardColuna);
+        return $cardColuna.find('.dashboard-evento-card').first();
+    }
+
+    var textoResumo = $.trim(
+        $observacao.find('small').first().text() + ' ' +
+        $observacao.children('div').first().text()
+    );
+    var $coluna = $('<div class="col-sm-6 col-md-4 dashboard-observacao-coluna"></div>');
+    var $card = $('<div class="panel panel-default dashboard-evento-card dashboard-evento-card-observacao-only" data-total-ocorrencias="0"></div>')
+        .attr('data-profissional-especialidade', profissional)
+        .css('border', '1px solid #ccc');
+    if (idServidor !== null && idEspec !== null) {
+        $card.attr('data-id-servidor', idServidor).attr('data-id-espec', idEspec);
+    }
+    var $cabecalho = $('<div class="panel-heading"></div>')
+        .css({padding: '8px 12px', color: '#337ab7', fontWeight: 'bold'});
+    var $titulo = $('<span style="font-size:11px;"></span>').text(profissional);
+    var $previa = $('<div class="dashboard-evento-card-preview"></div>').text(textoResumo);
+    var $icone = $('<span class="glyphicon glyphicon-chevron-down dashboard-evento-expandir-icon" aria-hidden="true" title="Passe o mouse para expandir"></span>');
+    var $corpo = $('<div class="panel-body" style="padding:12px; line-height:1.25; max-height:420px; overflow-y:auto;"></div>');
+    var $tituloObservacoes = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
+
+    $cabecalho.append($titulo, $previa, $icone);
+    $corpo.append($tituloObservacoes);
+    $card.append($cabecalho, $corpo);
+    $coluna.append($card);
+    inserirColunaCardDashboard($linha, $coluna);
+    return $card;
+}
+
 function integrarObservacoesNosCardsDashboard() {
     var $observacoes = $('#container-observacoes-agenda .dashboard-observacao-agenda, #observacoes-agenda-topo .dashboard-observacao-agenda, .dashboard-evento-card .dashboard-observacao-agenda');
     var $topo = $('#observacoes-agenda-topo');
@@ -81,33 +194,47 @@ function integrarObservacoesNosCardsDashboard() {
     $observacoes.each(function () {
         var $observacao = $(this);
         var profissional = $observacao.attr('data-profissional-especialidade');
-        var $card = $('.dashboard-evento-card[data-profissional-especialidade]').filter(function () {
-            return $(this).attr('data-profissional-especialidade') === profissional;
+        var idServidor = $observacao.attr('data-id-servidor');
+        var idEspec = $observacao.attr('data-id-espec');
+        var possuiIds = idServidor !== undefined && idEspec !== undefined;
+        var $card = $('.dashboard-evento-card[data-profissional-especialidade]').not('.dashboard-evento-card-observacao-only').filter(function () {
+            var $candidato = $(this);
+            if (possuiIds && $candidato.attr('data-id-servidor') !== undefined && $candidato.attr('data-id-espec') !== undefined) {
+                return String($candidato.attr('data-id-servidor')) === String(idServidor) &&
+                    String($candidato.attr('data-id-espec')) === String(idEspec);
+            }
+            return $candidato.attr('data-profissional-especialidade') === profissional;
         }).first();
 
-        if ($card.length) {
-            var $panelBody = $card.find('.panel-body').first();
-            var $tituloObservacoes = $panelBody.find('.dashboard-observacoes-titulo').first();
-
-            if (!$tituloObservacoes.length) {
-                $tituloObservacoes = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
-                $tituloObservacoes.prependTo($panelBody);
-            }
-
-            $observacao.insertAfter($tituloObservacoes);
-        } else {
-            var $tituloTopo = $topo.find('.dashboard-observacoes-titulo').first();
-
-            if (!$tituloTopo.length) {
-                $tituloTopo = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
-                $tituloTopo.prependTo($topo);
-            }
-
-            $observacao.insertAfter($tituloTopo);
+        if (!$card.length) {
+            $card = criarCardObservacaoSemOcorrencia(
+                profissional,
+                possuiIds ? idServidor : null,
+                possuiIds ? idEspec : null,
+                $observacao,
+                $topo
+            );
         }
+
+        var $panelBody = $card.find('.panel-body').first();
+        var $tituloObservacoes = $panelBody.find('.dashboard-observacoes-titulo').first();
+        if (!$tituloObservacoes.length) {
+            $tituloObservacoes = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
+            $tituloObservacoes.prependTo($panelBody);
+        }
+        $observacao.insertAfter($tituloObservacoes);
     });
 
-    $topo.toggle($topo.find('.dashboard-observacao-agenda').length > 0);
+    $('.dashboard-evento-card-observacao-only').each(function () {
+        if (!$(this).find('.dashboard-observacao-agenda').length) {
+            $(this).closest('.dashboard-observacao-coluna').remove();
+        }
+    });
+    $('.dashboard-observacoes-cards').each(function () {
+        if (!$(this).find('.dashboard-evento-card').length) $(this).remove();
+    });
+
+    $topo.toggle($topo.find('.dashboard-evento-card-observacao-only').length > 0);
     $('#card-observacoes-agenda').hide();
     atualizarContagemConteudoCardsDashboard();
 }
