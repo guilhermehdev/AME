@@ -985,6 +985,16 @@ table .header-danger {
     width: 100%;
 }
 
+.label-black {
+    color: #fff;
+    background-color: #000;
+}
+
+.label-mes-dashboard {
+    color: #fff;
+    background-color: #1f4e79;
+}
+
 /* Colunas independentes: a expansão de um card só empurra os cards abaixo
    dele na mesma coluna. */
 .dashboard-eventos-cards {

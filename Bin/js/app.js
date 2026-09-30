@@ -75,12 +75,17 @@ function organizarColunasCardsDashboard($linha) {
 }
 
 function inserirColunaCardDashboard($linha, $item) {
-    organizarColunasCardsDashboard($linha);
-
     var $colunas = $linha.children('.dashboard-eventos-coluna');
     if (!$colunas.length) {
-        $linha.append($('<div class="dashboard-eventos-coluna"></div>'));
+        // Só reorganiza quando a linha ainda não possui colunas. Depois que os
+        // cards foram distribuídos, novos cards entram na menor coluna sem
+        // reconstruir a linha e sem remover temporariamente os existentes.
+        organizarColunasCardsDashboard($linha);
         $colunas = $linha.children('.dashboard-eventos-coluna');
+        if (!$colunas.length) {
+            $linha.append($('<div class="dashboard-eventos-coluna"></div>'));
+            $colunas = $linha.children('.dashboard-eventos-coluna');
+        }
     }
 
     var $destino = $colunas.first();
@@ -149,14 +154,12 @@ function criarCardObservacaoSemOcorrencia(profissional, idServidor, idEspec, $ob
         return $cardExistente.attr('data-profissional-especialidade') === profissional;
     }).closest('.dashboard-observacao-coluna').first();
     if ($cardColuna.length) {
-        if (!$cardColuna.parent().is($linha)) $linha.append($cardColuna);
+        if (!$cardColuna.closest('.dashboard-eventos-cards').is($linha)) {
+            inserirColunaCardDashboard($linha, $cardColuna);
+        }
         return $cardColuna.find('.dashboard-evento-card').first();
     }
 
-    var textoResumo = $.trim(
-        $observacao.find('small').first().text() + ' ' +
-        $observacao.children('div').first().text()
-    );
     var $coluna = $('<div class="col-sm-6 col-md-4 dashboard-observacao-coluna"></div>');
     var $card = $('<div class="panel panel-default dashboard-evento-card dashboard-evento-card-observacao-only" data-total-ocorrencias="0"></div>')
         .attr('data-profissional-especialidade', profissional)
@@ -167,7 +170,7 @@ function criarCardObservacaoSemOcorrencia(profissional, idServidor, idEspec, $ob
     var $cabecalho = $('<div class="panel-heading"></div>')
         .css({padding: '8px 12px', color: '#337ab7', fontWeight: 'bold'});
     var $titulo = $('<span style="font-size:11px;"></span>').text(profissional);
-    var $previa = $('<div class="dashboard-evento-card-preview"></div>').text(textoResumo);
+    var $previa = $('<div class="dashboard-evento-card-preview"><span class="label label-warning">Observação</span></div>');
     var $icone = $('<span class="glyphicon glyphicon-chevron-down dashboard-evento-expandir-icon" aria-hidden="true" title="Passe o mouse para expandir"></span>');
     var $corpo = $('<div class="panel-body" style="padding:12px; line-height:1.25; max-height:420px; overflow-y:auto;"></div>');
     var $tituloObservacoes = $('<div class="small text-dark dashboard-observacoes-titulo" style="margin-bottom:6px;"><span class="glyphicon glyphicon-comment"></span> Observações</div>');
@@ -232,10 +235,6 @@ function integrarObservacoesNosCardsDashboard() {
     });
     $('.dashboard-observacoes-cards').each(function () {
         if (!$(this).find('.dashboard-evento-card').length) $(this).remove();
-    });
-
-    $('.dashboard-eventos-cards').each(function () {
-        organizarColunasCardsDashboard($(this));
     });
 
     $topo.toggle($topo.find('.dashboard-evento-card-observacao-only').length > 0);
@@ -374,6 +373,75 @@ $(document).on('click', '#tabs-oci a[data-toggle="tab"]', function (e) {
     $(alvo).addClass('active in');
 });
 
+function atualizarBotoesExclusaoPdfs($container) {
+    var quantidadeSelecionada = $container.find('.check-pdf-oci:checked').length;
+    var todosMarcados = $container.find('.check-pdf-oci').length > 0 &&
+        quantidadeSelecionada === $container.find('.check-pdf-oci').length;
+
+    $container.find('.btn-baixar-lote-serpro, .btn-imprimir-pdfs-selecionados, .btn-excluir-pdfs-selecionados, .btn-enviar-pdfs-assinados').prop('disabled', quantidadeSelecionada === 0);
+    $container.find('.check-selecionar-todos-pdfs').prop('checked', todosMarcados);
+}
+
+function removerPdfExcluidoDaTela($item, $container) {
+    var $grupo = $item.closest('.pdfs-oci-grupo');
+    $item.remove();
+
+    var quantidade = $grupo.find('.pdf-oci-item').length;
+    if (quantidade === 0) {
+        $grupo.remove();
+    } else {
+        $grupo.find('.badge').text(quantidade);
+    }
+
+    var total = $container.find('.pdf-oci-item').length;
+    $('#badge-pdfs-oci').text(total);
+    atualizarBotoesExclusaoPdfs($container);
+
+    if (total === 0) {
+        $container.find('.check-selecionar-todos-pdfs').prop('checked', false);
+        $container.fadeOut(150, function () {
+            $(this).remove();
+        });
+    }
+}
+
+function localizarItemPdf($container, nome, pasta) {
+    var encontrado = $();
+    var pastaNormalizada = String(pasta || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+
+    $container.find('.pdf-oci-item').each(function () {
+        var $item = $(this);
+        var $botao = $item.find('.btn-assinar-serpro');
+        var nomeItem = $botao.attr('data-pdf-name') || '';
+        var pastaItem = ($botao.attr('data-pdf-pasta') || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+
+        if (nomeItem === nome && pastaItem === pastaNormalizada) {
+            encontrado = $item;
+            return false;
+        }
+    });
+
+    return encontrado;
+}
+
+function obterPdfsMarcadosParaExclusao($container) {
+    var pdfs = [];
+
+    $container.find('.check-pdf-oci:checked').each(function () {
+        var $item = $(this).closest('.pdf-oci-item');
+        var $botao = $item.find('.btn-assinar-serpro');
+
+        if ($botao.length) {
+            pdfs.push({
+                nome: $botao.attr('data-pdf-name') || '',
+                pasta: $botao.attr('data-pdf-pasta') || ''
+            });
+        }
+    });
+
+    return pdfs;
+}
+
 $(document).on('click', '.btn-excluir-pdf-oci', function (e) {
     e.preventDefault();
 
@@ -421,23 +489,7 @@ $(document).on('click', '.btn-excluir-pdf-oci', function (e) {
                     return;
                 }
 
-                var $grupo = $item.closest('.pdfs-oci-grupo');
-                $item.remove();
-
-                var quantidade = $grupo.find('.pdf-oci-item').length;
-                if (quantidade === 0) {
-                    $grupo.remove();
-                } else {
-                    $grupo.find('.badge').text(quantidade);
-                }
-
-                var total = $container.find('.pdf-oci-item').length;
-                $('#badge-pdfs-oci').text(total);
-                $container.find('.btn-baixar-lote-serpro, .btn-enviar-pdfs-assinados').prop('disabled', total === 0);
-
-                if (total === 0) {
-                    $container.find('.check-selecionar-todos-pdfs').prop('checked', false);
-                }
+                removerPdfExcluidoDaTela($item, $container);
             }).fail(function (xhr) {
                 var resposta = {};
                 try {
@@ -452,6 +504,78 @@ $(document).on('click', '.btn-excluir-pdf-oci', function (e) {
                     message: resposta.mensagem || 'Falha de comunicação ao excluir o PDF.'
                 });
                 $botao.prop('disabled', false);
+            });
+        }
+    });
+});
+
+$(document).on('click', '.btn-excluir-pdfs-selecionados', function (e) {
+    e.preventDefault();
+
+    var $botao = $(this);
+    var $container = $botao.closest('.dashboard-pdf-alert');
+    var pdfs = obterPdfsMarcadosParaExclusao($container);
+
+    if (!pdfs.length) {
+        return;
+    }
+
+    BootstrapDialog.confirm({
+        cssClass: 'sm-dialog',
+        type: BootstrapDialog.TYPE_DANGER,
+        title: 'Excluir PDFs selecionados',
+        message: 'Deseja excluir os ' + pdfs.length + ' PDF(s) selecionado(s)?',
+        draggable: true,
+        btnCancelLabel: 'Não',
+        btnOKLabel: 'Sim',
+        btnOKClass: 'btn-danger',
+        autodestroy: true,
+        callback: function (confirmado) {
+            if (!confirmado) {
+                return;
+            }
+
+            $botao.prop('disabled', true).text('Excluindo...');
+
+            $.ajax({
+                url: (window.GLOBAL_URL || $('#URL').val() || '') + 'OCI/excluirPdfsSelecionados',
+                type: 'POST',
+                dataType: 'json',
+                data: {pdfs: JSON.stringify(pdfs)}
+            }).done(function (resposta) {
+                $.each((resposta && resposta.removidos) || [], function (_, pdf) {
+                    var $item = localizarItemPdf($container, pdf.nome || '', pdf.pasta || '');
+                    if ($item.length) {
+                        removerPdfExcluidoDaTela($item, $container);
+                    }
+                });
+
+                var falhou = resposta && resposta.falhas && resposta.falhas.length;
+                BootstrapDialog.alert({
+                    cssClass: 'sm-dialog',
+                    type: falhou ? BootstrapDialog.TYPE_WARNING : BootstrapDialog.TYPE_SUCCESS,
+                    title: falhou ? 'Exclusão parcial' : 'Exclusão concluída',
+                    message: (resposta && resposta.mensagem) || 'PDFs excluídos com sucesso.'
+                });
+
+                $botao.prop('disabled', false).html('<span class="glyphicon glyphicon-trash"></span> Excluir selecionados');
+                atualizarBotoesExclusaoPdfs($container);
+            }).fail(function (xhr) {
+                var resposta = {};
+                try {
+                    resposta = JSON.parse(xhr.responseText || '{}');
+                } catch (ex) {
+                    resposta = {};
+                }
+
+                BootstrapDialog.alert({
+                    cssClass: 'sm-dialog',
+                    type: BootstrapDialog.TYPE_DANGER,
+                    title: 'Exclusão não realizada',
+                    message: resposta.mensagem || 'Falha de comunicação ao excluir os PDFs.'
+                });
+                $botao.html('<span class="glyphicon glyphicon-trash"></span> Excluir selecionados');
+                atualizarBotoesExclusaoPdfs($container);
             });
         }
     });
@@ -703,7 +827,7 @@ $(function () {
     var fimProximaSemana = new Date(inicioProximaSemana);
     fimProximaSemana.setDate(inicioProximaSemana.getDate() + 6);
     $('#periodo-proximos-dias').text(
-        formatarDataBrDashboard(inicioProximaSemana) + ' a ' +
+        formatarDataBrDashboard(inicioProximaSemana) + ' à ' +
         formatarDataBrDashboard(fimProximaSemana)
     );
     carregarEventosDashboard(

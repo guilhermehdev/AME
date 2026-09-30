@@ -291,25 +291,23 @@ class Daooci {
         // Autoriza somente PDFs que já foram listados para o usuário logado.
         $pdfsPermitidos = self::getPdfsGerados($medico, $idUsuario, $nomeUsuario);
         $pastaNormalizada = implode('/', $partesPasta);
-        $permitido = false;
+        $caminhoPermitido = '';
 
         foreach ((array) $pdfsPermitidos as $pdf) {
             $pastaPdf = isset($pdf['pasta']) ? trim(str_replace('\\', '/', $pdf['pasta']), '/') : '';
-            if ((!isset($pdf['etapa']) || $pdf['etapa'] === 'executante') &&
-                $pdf['nome'] === $nomeArquivo && $pastaPdf === $pastaNormalizada) {
-                $permitido = true;
+            $nomePdf = isset($pdf['nome']) ? basename($pdf['nome']) : '';
+            if ($nomePdf === $nomeArquivo && $pastaPdf === $pastaNormalizada &&
+                !empty($pdf['caminho']) && is_file($pdf['caminho'])) {
+                $caminhoPermitido = $pdf['caminho'];
                 break;
             }
         }
 
-        if (!$permitido) {
+        if ($caminhoPermitido === '') {
             return array('erro' => true, 'mensagem' => 'Esse PDF não pertence ao usuário logado ou já foi assinado.');
         }
 
-        $diretorioBase = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Impressos' . DIRECTORY_SEPARATOR . 'OCI' . DIRECTORY_SEPARATOR . 'Gerados' . DIRECTORY_SEPARATOR;
-        $caminho = $diretorioBase . ($pastaNormalizada !== '' ? str_replace('/', DIRECTORY_SEPARATOR, $pastaNormalizada) . DIRECTORY_SEPARATOR : '') . $nomeArquivo;
-
-        if (!is_file($caminho) || !unlink($caminho)) {
+        if (!unlink($caminhoPermitido)) {
             return array('erro' => true, 'mensagem' => 'Não foi possível excluir o PDF.');
         }
 
@@ -318,6 +316,58 @@ class Daooci {
         self::atualizarAssinadoPorArquivo($nomeArquivo, 0);
 
         return array('erro' => false, 'mensagem' => 'PDF excluído com sucesso.');
+    }
+
+    public static function excluirPdfsSelecionados($itens, $idUsuario = null, $nomeUsuario = '', $medico = '') {
+        $removidos = array();
+        $falhas = array();
+
+        foreach ((array)$itens as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $nome = isset($item['nome']) ? $item['nome'] : '';
+            $pasta = isset($item['pasta']) ? $item['pasta'] : '';
+            $resultado = self::excluirPdfGerado($nome, $pasta, $idUsuario, $nomeUsuario, $medico);
+
+            if (!empty($resultado['erro'])) {
+                $falhas[] = array(
+                    'nome' => basename((string)$nome),
+                    'pasta' => trim(str_replace('\\', '/', (string)$pasta), '/'),
+                    'mensagem' => $resultado['mensagem']
+                );
+                continue;
+            }
+
+            $removidos[] = array(
+                'nome' => basename((string)$nome),
+                'pasta' => trim(str_replace('\\', '/', (string)$pasta), '/')
+            );
+        }
+
+        if (empty($removidos)) {
+            return array(
+                'erro' => true,
+                'mensagem' => !empty($falhas[0]['mensagem'])
+                    ? $falhas[0]['mensagem']
+                    : 'Nenhum PDF selecionado pôde ser excluído.',
+                'removidos' => array(),
+                'falhas' => $falhas
+            );
+        }
+
+        $mensagem = count($removidos) . ' PDF(s) excluído(s) com sucesso.';
+        if (!empty($falhas)) {
+            $mensagem .= ' ' . count($falhas) . ' não pôde(ram) ser excluído(s).';
+        }
+
+        return array(
+            'erro' => false,
+            'mensagem' => $mensagem,
+            'removidos' => $removidos,
+            'falhas' => $falhas
+        );
     }
            
     public static function getTipoOCI($idUser) {       
@@ -624,6 +674,7 @@ WHERE serv_oci.id_serv ={$idUser}", "ORDER BY cod_oci_principal.id");
                 'nome' => $arquivo,
                 'url' => URL . 'Impressos/OCI/Gerados/' . implode('/', $segmentosUrl),
                 'pasta' => $pastaRelativa === '.' ? '' : $pastaRelativa,
+                'caminho' => $caminhoArquivo,
                 'data' => $data,
                 'etapa' => 'executante',
                 'modificado' => filemtime($caminhoArquivo)
@@ -706,6 +757,7 @@ WHERE serv_oci.id_serv ={$idUser}", "ORDER BY cod_oci_principal.id");
                             'nome' => $arquivo,
                             'url' => URL . 'Impressos/OCI/PendentesAutorizador/' . implode('/', $segmentosUrl),
                             'pasta' => dirname($relativoUrl) === '.' ? '' : dirname($relativoUrl),
+                            'caminho' => $arquivoInfo->getPathname(),
                             'data' => $data,
                             'etapa' => 'autorizador',
                             'modificado' => filemtime($arquivoInfo->getPathname())

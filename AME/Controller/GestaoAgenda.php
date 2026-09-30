@@ -297,7 +297,19 @@ class GestaoAgenda {
         $dataIni = isset($param[2]) ? $param[2] : date('Y-m-d');
         $dataFim = isset($param[3]) ? $param[3] : $dataIni;
         $incluirFixos = $dataIni === date('Y-m-d') && $dataFim === date('Y-m-d');
-        $eventos = DaoGestaoAgenda::getEventosDashboard($dataIni, $dataFim, $incluirFixos);
+        $excluirFixosIni = null;
+        $excluirFixosFim = null;
+        if ($incluirFixos) {
+            $excluirFixosIni = date('Y-m-d', strtotime($dataIni . ' +1 day'));
+            $excluirFixosFim = date('Y-m-d', strtotime($dataIni . ' +7 days'));
+        }
+        $eventos = DaoGestaoAgenda::getEventosDashboard(
+            $dataIni,
+            $dataFim,
+            $incluirFixos,
+            $excluirFixosIni,
+            $excluirFixosFim
+        );
         $v = new TGui("gestao_agenda_dashboard_eventos");
         $v->addData("eventos", $eventos);
         $v->renderize(APP_VIEW_LIST, true);

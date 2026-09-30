@@ -31,6 +31,12 @@ if (!empty($pdfs)) {
     echo '      <button type="button" class="btn btn-primary btn-sm btn-baixar-lote-serpro" style="font-size:13px;" disabled>';
     echo '          <span class="glyphicon glyphicon-download-alt"></span> Baixar selecionados';
     echo '      </button>';
+    echo '      <button type="button" class="btn btn-default btn-sm btn-imprimir-pdfs-selecionados" style="font-size:13px;" disabled>';
+    echo '          <span class="glyphicon glyphicon-print"></span> Imprimir selecionados';
+    echo '      </button>';
+    echo '      <button type="button" class="btn btn-danger btn-sm btn-excluir-pdfs-selecionados" style="font-size:13px;" disabled>';
+    echo '          <span class="glyphicon glyphicon-trash"></span> Excluir selecionados';
+    echo '      </button>';
     echo '      <button type="button" class="btn btn-success btn-sm btn-enviar-pdfs-assinados" style="font-size:13px;" disabled>';
     echo '          <span class="glyphicon glyphicon-upload"></span> Enviar assinados';
     echo '      </button>';
@@ -81,14 +87,12 @@ if (!empty($pdfs)) {
             echo '          data-salvar-url="OCI/salvarPdfAssinado">';
             echo '      <span class="glyphicon glyphicon-pencil"></span> ' . ($etapaAssinatura === 'autorizador' ? 'Assinar' : 'Assinar');
             echo '  </button>';
-            if ($etapaAssinatura === 'executante') {
-                echo '  <button type="button" class="btn btn-danger btn-sm btn-excluir-pdf-oci" style="font-size:13px;"';
-                echo '          data-pdf-name="' . $pdfNome . '"';
-                echo '          data-pdf-pasta="' . $pdfPasta . '"';
-                echo '          title="Excluir PDF pendente">';
-                echo '      <span class="glyphicon glyphicon-trash"></span> Excluir';
-                echo '  </button>';
-            }
+            echo '  <button type="button" class="btn btn-danger btn-sm btn-excluir-pdf-oci" style="font-size:13px;"';
+            echo '          data-pdf-name="' . $pdfNome . '"';
+            echo '          data-pdf-pasta="' . $pdfPasta . '"';
+            echo '          title="Excluir PDF pendente">';
+            echo '      <span class="glyphicon glyphicon-trash"></span> Excluir';
+            echo '  </button>';
             echo '</div>';
         }
 

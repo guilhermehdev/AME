@@ -275,7 +275,7 @@ class DaoGestaoAgenda {
     // Dashboard
     // ----------------------------------------
 
-    public static function getEventosDashboard($dataIni, $dataFim, $incluirFixos = false) {
+    public static function getEventosDashboard($dataIni, $dataFim, $incluirFixos = false, $excluirFixosIni = null, $excluirFixosFim = null) {
         $sql = "SELECT ae.*, am.id_servidor, am.id_espec,
                        s.nome AS nome_servidor, e.especialidade
                 FROM agenda_eventos ae
@@ -284,11 +284,20 @@ class DaoGestaoAgenda {
                 INNER JOIN especs e ON e.id = am.id_espec
                 WHERE (ae.data_evento BETWEEN :DATAINI AND :DATAFIM";
         if ($incluirFixos) {
-            $sql .= " OR ae.show_dashboard = 1";
+            $sql .= " OR (ae.show_dashboard = 1";
+            if ($excluirFixosIni && $excluirFixosFim) {
+                $sql .= " AND NOT (ae.data_evento BETWEEN :EXCLUIRFIXOSINI AND :EXCLUIRFIXOSFIM)";
+            }
+            $sql .= ")";
         }
         $sql .= ")
                 ORDER BY ae.data_evento ASC, e.especialidade, s.nome";
-        $ds = Maincontroller::doQuery($sql, ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim]);
+        $params = ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim];
+        if ($incluirFixos && $excluirFixosIni && $excluirFixosFim) {
+            $params['EXCLUIRFIXOSINI'] = $excluirFixosIni;
+            $params['EXCLUIRFIXOSFIM'] = $excluirFixosFim;
+        }
+        $ds = Maincontroller::doQuery($sql, $params);
         $arr = [];
         while ($row = $ds->fetch(PDO::FETCH_ASSOC)) $arr[] = $row;
         return $arr;

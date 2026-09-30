@@ -4,9 +4,9 @@ $tipoLabel = [
     'AUSENCIA' => ['Ausência', 'danger', 'remove'],
     'FOLGA' => ['Folga', 'warning', 'calendar'],
     'REAGENDAMENTO' => ['Reagendamento', 'info', 'calendar'],
-    'FERIAS' => ['Férias', 'primary', 'plane'],
+    'FERIAS' => ['Férias', 'success', 'plane'],
     'LICENCA' => ['Licença', 'purple', 'briefcase'],
-    'OUTRO' => ['Outro', 'default', 'info-sign']
+    'OUTRO' => ['Outro', 'black', 'info-sign']
 ];
 
 if (empty($eventos)) {
@@ -42,22 +42,39 @@ foreach ($grupos as $grupo) {
     $prof = $grupo['nome_servidor'] ?: 'Sem profissional fixo';
     $titulo = htmlspecialchars($prof . ' - ' . $grupo['especialidade'], ENT_QUOTES, 'UTF-8');
     $conteudo = '';
-    $primeiraData = key($grupo['datas']);
-    $primeirosEventos = reset($grupo['datas']);
-    $primeiroEvento = reset($primeirosEventos);
-    $tipoPreview = isset($tipoLabel[$primeiroEvento['tipo']])
-        ? $tipoLabel[$primeiroEvento['tipo']]
-        : array($primeiroEvento['tipo'], 'default', 'info-sign');
+    $mesesPreview = array(
+        1 => 'Jan', 2 => 'Fev', 3 => 'Mar', 4 => 'Abr',
+        5 => 'Mai', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
+        9 => 'Set', 10 => 'Out', 11 => 'Nov', 12 => 'Dez'
+    );
+    $tagsPreview = '';
+    $tagsPreviewUsadas = array();
     $totalEventosGrupo = 0;
     foreach ($grupo['datas'] as $eventosDaDataGrupo) {
         $totalEventosGrupo += count($eventosDaDataGrupo);
+        foreach ($eventosDaDataGrupo as $eventoGrupo) {
+            $chaveTipo = (string)$eventoGrupo['tipo'];
+            $tipoPreview = isset($tipoLabel[$chaveTipo])
+                ? $tipoLabel[$chaveTipo]
+                : array($chaveTipo, 'default', 'info-sign');
+            $mesNumero = (int)date('n', strtotime($eventoGrupo['data_evento']));
+            $mesNome = isset($mesesPreview[$mesNumero])
+                ? $mesesPreview[$mesNumero]
+                : 'Mês não informado';
+            $chaveTag = $mesNumero . '|' . $chaveTipo;
+
+            if (!isset($tagsPreviewUsadas[$chaveTag])) {
+                $tagsPreviewUsadas[$chaveTag] = true;
+                $tagsPreview .= '<span class="label label-mes-dashboard">'
+                    . $mesNome . '</span> '
+                    . '<span class="label label-' . $tipoPreview[1] . '">'
+                    . htmlspecialchars($tipoPreview[0], ENT_QUOTES, 'UTF-8') . '</span> ';
+            }
+        }
     }
     $eventosAdicionais = max(0, $totalEventosGrupo - 1);
     $preview = '<div class="dashboard-evento-card-preview">'
-        . '<strong>' . Functions::BRdateFormat($primeiraData) . '</strong> '
-        . '<span class="label label-' . $tipoPreview[1] . '">'
-        . htmlspecialchars($tipoPreview[0], ENT_QUOTES, 'UTF-8') . '</span> '
-        . '<span>' . htmlspecialchars($primeiroEvento['descricao'], ENT_QUOTES, 'UTF-8') . '</span>'
+        . $tagsPreview
         . '</div>';
     $badgeAdicionais = $eventosAdicionais > 0
         ? '<span class="badge dashboard-evento-card-mais" title="' . $eventosAdicionais . ' ocorrências além da prévia">+' . $eventosAdicionais . '</span>'
@@ -86,7 +103,7 @@ foreach ($grupos as $grupo) {
         }
 
         $conteudo .= '<div class="dashboard-evento-data-grupo" style="margin-bottom:10px;">
-                <div style="font-weight:bold; margin-bottom:5px;"><span class="glyphicon glyphicon-calendar"></span> ' . $data . '</div>
+                <div style="font-weight:bold; margin-bottom:5px; color:#5b2c6f;"><span class="glyphicon glyphicon-calendar"></span> ' . $data . '</div>
                 <ul style="padding-left:18px; margin:0;">' . $itens . '</ul>
             </div>';
     }

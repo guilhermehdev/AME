@@ -21,33 +21,7 @@ echo
                 <span class=\"glyphicon glyphicon-star-empty\"></span> Painel de avisos
             </legend>
             <div id=\"profissionais-avisos-agenda\" style=\"display:none; margin:0 0 10px 5px; color:#337ab7; font-weight:bold;\"></div>
-                <div class=\"row\" style=\"margin-left: -5px;\">
             
-                    <div id=\"col-ocorrencias-dashboard\" class=\"col-sm-12\" style=\"min-height:120px;\">
-
-                        <div id=\"card-observacoes-agenda\" style=\"display:none;\">
-                            <div id=\"container-observacoes-agenda\" name=\"container-observacoes-agenda\"></div>
-                        </div>
-
-                        <div id=\"observacoes-agenda-topo\"></div>
-                        <div id=\"card-eventos-hoje\">
-                            <div id=\"container-eventos-hoje\" name=\"container-eventos-hoje\">
-                                <p class=\"text-dark\" style=\"padding:5px;\">Carregando...</p>
-                            </div>
-                        </div>
-                        <div id=\"card-eventos-proxima-semana\">
-                            <hr>
-                            <div class=\"small text-dark\" style=\"margin-bottom:6px;\">
-                                <span class=\"glyphicon glyphicon-calendar\"></span> Eventos de <span id=\"periodo-proximos-dias\"></span>
-                            </div>
-                            <div id=\"container-eventos-proxima-semana\" name=\"container-eventos-proxima-semana\">
-                                <p class=\"text-dark\" style=\"padding:5px;\">Carregando...</p>
-                            </div>
-                        </div>
-                    </div>                
-                
-            </div>
-            <hr>
             <button type=\"button\" id=\"btn-toggle-filtro-dashboard\" class=\"btn btn-default btn-md\">
                 <span class=\"glyphicon glyphicon-search\"></span>
             </button>
@@ -73,8 +47,34 @@ echo
                     <button type=\"button\" id=\"btn-limpar-dashboard\" class=\"btn btn-default\">Limpar</button>
                 </div>
             </div>
-            <div id=\"container-eventos-periodo\" name=\"container-eventos-periodo\" class=\"mrg-top\">
-                <p class=\"text-muted\" style=\"padding:15px;\"></p>
+            <div id=\"container-eventos-periodo\" name=\"container-eventos-periodo\" class=\"mrg-top\">              
+            </div>
+                <div class=\"row\" style=\"margin-left: -5px;\">
+            
+                    <div id=\"col-ocorrencias-dashboard\" class=\"col-sm-12\" style=\"min-height:120px;\">
+
+                        <div id=\"card-observacoes-agenda\" style=\"display:none;\">
+                            <div id=\"container-observacoes-agenda\" name=\"container-observacoes-agenda\"></div>
+                        </div>
+
+                        <div id=\"card-eventos-proxima-semana\">
+                            <div class=\"small text-dark\" style=\"margin-bottom:6px;\">
+                                <span class=\"glyphicon glyphicon-calendar\"></span> Ocorrências de <span id=\"periodo-proximos-dias\"></span>
+                            </div>
+                            <div id=\"container-eventos-proxima-semana\" name=\"container-eventos-proxima-semana\">
+                                <p class=\"text-dark\" style=\"padding:5px;\">Carregando...</p>
+                            </div>
+                        </div>
+
+                        <div id=\"card-eventos-hoje\" style=\"margin-top:12px;\">
+                            <hr>
+                            <div id=\"observacoes-agenda-topo\"></div>
+                            <div id=\"container-eventos-hoje\" name=\"container-eventos-hoje\">
+                                <p class=\"text-dark\" style=\"padding:5px;\">Carregando...</p>
+                            </div>
+                        </div>
+                    </div>                
+                
             </div>
         </fieldset>
     </div>

@@ -108,6 +108,42 @@ class OCI {
         echo json_encode($resultado);
     }
 
+    public function excluirPdfsSelecionados(){
+        header('Content-Type: application/json; charset=utf-8');
+
+        $sessao = AppController::checkSession();
+        if (!$sessao) {
+            http_response_code(401);
+            echo json_encode(array('erro' => true, 'mensagem' => 'Sessão expirada. Faça login novamente.'));
+            return;
+        }
+
+        $itens = isset($_POST['pdfs']) ? json_decode($_POST['pdfs'], true) : array();
+        if (!is_array($itens) || empty($itens)) {
+            http_response_code(422);
+            echo json_encode(array('erro' => true, 'mensagem' => 'Selecione ao menos um PDF para excluir.'));
+            return;
+        }
+
+        $idUsuario = isset($sessao['id']) ? $sessao['id'] : null;
+        $nomeUsuario = isset($sessao['username']) ? $sessao['username'] : '';
+        $cboSUS = $idUsuario ? Daooci::getCBO($idUsuario) : array();
+        $medico = !empty($cboSUS) && !empty($cboSUS[0]['SUS']) ? $cboSUS[0]['SUS'] : '';
+
+        $resultado = Daooci::excluirPdfsSelecionados(
+            $itens,
+            $idUsuario,
+            $nomeUsuario,
+            $medico
+        );
+
+        if (!empty($resultado['erro'])) {
+            http_response_code(422);
+        }
+
+        echo json_encode($resultado);
+    }
+
     public function salvarPdfAssinadoLote(){
         header('Content-Type: application/json; charset=utf-8');
 
@@ -174,6 +210,134 @@ class OCI {
 
         $resultado['arquivos'] = array(isset($resultado['nomeOrigem']) ? $resultado['nomeOrigem'] : $nomeOriginal);
         echo json_encode($resultado);
+    }
+
+    public function imprimirPdfsSelecionados(){
+        $sessao = AppController::checkSession();
+        if (!$sessao) {
+            http_response_code(401);
+            echo 'Sessão expirada. Faça login novamente.';
+            return;
+        }
+
+        $selecionados = isset($_POST['pdfs']) ? json_decode($_POST['pdfs'], true) : array();
+        if (!is_array($selecionados) || empty($selecionados)) {
+            http_response_code(422);
+            echo 'Nenhum PDF foi selecionado.';
+            return;
+        }
+
+        $idUsuario = isset($sessao['id']) ? $sessao['id'] : null;
+        $nomeUsuario = isset($sessao['username']) ? $sessao['username'] : '';
+        $cboSUS = $idUsuario ? Daooci::getCBO($idUsuario) : array();
+        $medico = !empty($cboSUS) && !empty($cboSUS[0]['SUS']) ? $cboSUS[0]['SUS'] : '';
+        $pdfsPermitidos = Daooci::getPdfsGerados($medico, $idUsuario, $nomeUsuario);
+
+        $normalizarPasta = function($valor) {
+            $valor = str_replace('\\', '/', trim($valor));
+            $valor = trim($valor, '/');
+            return $valor === '.' ? '' : $valor;
+        };
+        $normalizarChave = function($pasta, $nome) use ($normalizarPasta) {
+            $chave = $normalizarPasta($pasta) . '/' . basename($nome);
+            return function_exists('mb_strtolower')
+                ? mb_strtolower($chave, 'UTF-8')
+                : strtolower($chave);
+        };
+
+        $permitidos = array();
+        foreach ($pdfsPermitidos as $pdfPermitido) {
+            $pastaPermitida = isset($pdfPermitido['pasta']) ? $pdfPermitido['pasta'] : '';
+            $nomePermitido = isset($pdfPermitido['nome']) ? basename($pdfPermitido['nome']) : '';
+            $caminhoPermitido = isset($pdfPermitido['caminho']) ? $pdfPermitido['caminho'] : '';
+            $permitidos[$normalizarChave($pastaPermitida, $nomePermitido)] = $caminhoPermitido;
+        }
+        $arquivos = array();
+
+        foreach ($selecionados as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $nome = isset($item['nome']) ? basename($item['nome']) : '';
+            $pasta = isset($item['pasta']) ? $item['pasta'] : '';
+
+            if ($nome === '' || strtolower(pathinfo($nome, PATHINFO_EXTENSION)) !== 'pdf' || preg_match('#(^|/)\.\.?(/|$)#', str_replace('\\', '/', $pasta))) {
+                continue;
+            }
+
+            $chave = $normalizarChave($pasta, $nome);
+            if (!isset($permitidos[$chave]) || !$permitidos[$chave]) {
+                continue;
+            }
+
+            $caminho = $permitidos[$chave];
+            if (is_file($caminho)) {
+                $arquivos[] = $caminho;
+            }
+        }
+
+        if (empty($arquivos)) {
+            http_response_code(422);
+            echo 'Nenhum dos PDFs selecionados está disponível para impressão.';
+            return;
+        }
+
+        $pdftk = dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'Bin' . DIRECTORY_SEPARATOR . 'Libs' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'export' . DIRECTORY_SEPARATOR . 'pdf' . DIRECTORY_SEPARATOR . 'pdftk.exe';
+        if (!is_file($pdftk)) {
+            http_response_code(500);
+            echo 'O executável PDFtk não foi encontrado no servidor.';
+            return;
+        }
+
+        $arquivoSaida = tempnam(sys_get_temp_dir(), 'oci_impressao_');
+        if ($arquivoSaida === false) {
+            http_response_code(500);
+            echo 'Não foi possível criar o arquivo temporário de impressão.';
+            return;
+        }
+        unlink($arquivoSaida);
+
+        $comando = escapeshellarg($pdftk);
+        foreach ($arquivos as $arquivo) {
+            $comando .= ' ' . escapeshellarg($arquivo);
+        }
+        $comando .= ' cat output ' . escapeshellarg($arquivoSaida);
+
+        $descritores = array(
+            0 => array('pipe', 'r'),
+            1 => array('pipe', 'w'),
+            2 => array('pipe', 'w')
+        );
+        $processo = proc_open($comando, $descritores, $pipes, dirname($pdftk));
+        if (!is_resource($processo)) {
+            http_response_code(500);
+            echo 'Não foi possível iniciar o PDFtk.';
+            return;
+        }
+
+        fclose($pipes[0]);
+        stream_get_contents($pipes[1]);
+        $erro = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $codigo = proc_close($processo);
+
+        if ($codigo !== 0 || !is_file($arquivoSaida)) {
+            if (is_file($arquivoSaida)) {
+                unlink($arquivoSaida);
+            }
+            http_response_code(500);
+            echo 'Não foi possível unir os PDFs.' . ($erro !== '' ? ' ' . trim($erro) : '');
+            return;
+        }
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="OCIs_selecionadas_' . date('Ymd_His') . '.pdf"');
+        header('Content-Length: ' . filesize($arquivoSaida));
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        readfile($arquivoSaida);
+        unlink($arquivoSaida);
     }
 
     public function solicitarPdf(){

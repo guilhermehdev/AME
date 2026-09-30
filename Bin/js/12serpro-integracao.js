@@ -433,7 +433,7 @@
         var $checks = $container.find('.check-pdf-oci');
         var $selecionados = $checks.filter(':checked');
         var desabilitarAcoes = $selecionados.length === 0;
-        $container.find('.btn-baixar-lote-serpro, .btn-enviar-pdfs-assinados').prop('disabled', desabilitarAcoes);
+        $container.find('.btn-baixar-lote-serpro, .btn-imprimir-pdfs-selecionados, .btn-excluir-pdfs-selecionados, .btn-enviar-pdfs-assinados').prop('disabled', desabilitarAcoes);
 
         var todosMarcados = $checks.length > 0 && $selecionados.length === $checks.length;
         $container.find('.check-selecionar-todos-pdfs').prop('checked', todosMarcados);
@@ -442,6 +442,8 @@
     function obterSelecaoPdfs($container) {
         var botoes = [];
         var nomes = [];
+        var urls = [];
+        var itens = [];
         var pastas = [];
         var etapas = [];
 
@@ -455,6 +457,8 @@
             if ($botao.length) {
                 botoes.push($botao[0]);
                 nomes.push(nome);
+                urls.push($botao.attr('data-pdf-url') || '');
+                itens.push({ nome: nome, pasta: pasta });
                 if ($.inArray(pasta, pastas) === -1) {
                     pastas.push(pasta);
                 }
@@ -464,7 +468,24 @@
             }
         });
 
-        return { botoes: botoes, nomes: nomes, pastas: pastas, etapas: etapas };
+        return { botoes: botoes, nomes: nomes, urls: urls, itens: itens, pastas: pastas, etapas: etapas };
+    }
+
+    function abrirPdfsParaImpressao(selecao, $botao, $container) {
+        var alvo = 'impressao_oci_' + Date.now();
+        var $formulario = $('<form method="post" target="' + alvo + '"></form>')
+            .attr('action', (window.GLOBAL_URL || $('#URL').val() || '') + 'OCI/imprimirPdfsSelecionados')
+            .css('display', 'none');
+        $('<input type="hidden" name="pdfs">')
+            .val(JSON.stringify(selecao.itens))
+            .appendTo($formulario);
+        $('body').append($formulario);
+        $formulario.trigger('submit');
+        $formulario.remove();
+
+        $botao.prop('disabled', false).text('Imprimir selecionados');
+        atualizarSelecaoPdfs($container);
+        mostrarStatus(selecao.itens.length + ' PDF(s) unidos em um único arquivo para impressão.', 'success');
     }
 
     function baixarLotePorDownload($botoes, indice, $botaoLote, $container) {
@@ -657,6 +678,22 @@
 
         $botaoLote.prop('disabled', true).text('Baixando...');
         baixarLoteParaSerpro(selecao.botoes, $botaoLote, $container);
+    });
+
+    $(document).on('click', '.btn-imprimir-pdfs-selecionados', function (evento) {
+        evento.preventDefault();
+
+        var $botao = $(this);
+        var $container = $botao.closest('.dashboard-pdf-alert');
+        var selecao = obterSelecaoPdfs($container);
+
+        if (!selecao.botoes.length) {
+            mostrarStatus('Selecione ao menos um PDF para imprimir.', 'warning');
+            return;
+        }
+
+        $botao.prop('disabled', true).text('Abrindo...');
+        abrirPdfsParaImpressao(selecao, $botao, $container);
     });
 
     $(document).on('click', '.btn-enviar-pdfs-assinados', function (evento) {

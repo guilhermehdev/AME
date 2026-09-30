@@ -8,8 +8,7 @@ echo
         <h2><small>Cadastros ></small> {$title}</h2>
     </div>
 	
-	<div class=\"col-sm-6\">       
-        <div class=\"row\">        
+    <div class=\"col-sm-6\">                 
             <div class=\"col-sm-12\"> 
                 <div class=\"col-sm-12\">                   
                     <input type=\"hidden\" name=\"inp-id\" id=\"inp-id\">
