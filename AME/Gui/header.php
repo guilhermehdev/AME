@@ -21,15 +21,20 @@
                       
     </head>
     
-    <body onload="">       
-    
 <?php
+$sessaoAtual = AppController::checkSession();
+$nomeUsuarioAtual = isset($sessaoAtual['username']) ? $sessaoAtual['username'] : '';
+$idUsuarioAtual = isset($sessaoAtual['id']) ? $sessaoAtual['id'] : '';
+$temaEscuroAtivo = !empty($sessaoAtual['darkTheme']);
+$classeTema = $temaEscuroAtivo ? 'theme-dark' : '';
+$rotuloTema = $temaEscuroAtivo ? 'Tema claro' : 'Tema escuro';
+$iconeTema = $temaEscuroAtivo ? 'glyphicon-sunglasses' : 'glyphicon-adjust';
+$usuarioExibicao = $nomeUsuarioAtual !== '' ? $nomeUsuarioAtual . ', Sair' : '';
+?>
 
-if(AppController::checkSession()['username'] != null){
-    $user = AppController::checkSession()['username'].", Sair";
-    $id = AppController::checkSession()['id'];
-}
+    <body class="<?php echo $classeTema; ?>" data-dark-theme="<?php echo $temaEscuroAtivo ? '1' : '0'; ?>">
 
+<?php
 echo "
 
 <nav class=\"navbar navbar-default\" data-spy=\"affix\">
@@ -43,10 +48,14 @@ echo "
             </a>             
         </div>
         
-        <div class=\"nav navbar-nav navbar-right mrg-bottom\" style=\"padding-right:15px;padding-left:15px;margin-top:18px;\">
+        <div class=\"nav navbar-nav navbar-right mrg-bottom\" style=\"padding-right:15px;padding-left:15px;margin-top:14px;\">
             <span class=\"label label-danger\"></span>
-            <a style=\"color:#fff;\" href=\"".URL."Loginadm/logoutadm/{$id}\">".
-                $user
+            <button type=\"button\" id=\"btn-toggle-dark-theme\" class=\"btn btn-link theme-toggle\" title=\"{$rotuloTema}\" aria-label=\"{$rotuloTema}\" data-dark-theme=\"{$temaEscuroAtivo}\">
+                <span class=\"glyphicon {$iconeTema}\" aria-hidden=\"true\"></span>
+                <span class=\"theme-toggle-label\">{$rotuloTema}</span>
+            </button>
+            <a style=\"color:#fff;\" href=\"".URL."Loginadm/logoutadm/{$idUsuarioAtual}\">".
+                $usuarioExibicao
           ."</a>
         </div>
 

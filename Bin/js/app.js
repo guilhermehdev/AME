@@ -31,7 +31,72 @@ $(document).ready(function () {
     GLOBAL_URL = $('#URL').val();
 }); 
 
+function atualizarBotaoTema(darkTheme) {
+    var $botao = $('#btn-toggle-dark-theme');
+    if (!$botao.length) return;
 
+    var rotulo = darkTheme ? 'Tema claro' : 'Tema escuro';
+    var icone = darkTheme ? 'glyphicon-sunglasses' : 'glyphicon-adjust';
+    $botao.attr('data-dark-theme', darkTheme ? '1' : '0')
+        .attr('title', rotulo)
+        .attr('aria-label', rotulo)
+        .find('.theme-toggle-label').text(rotulo);
+    $botao.find('.glyphicon')
+        .removeClass('glyphicon-adjust glyphicon-sunglasses')
+        .addClass(icone);
+}
+
+$(document).on('click', '#btn-toggle-dark-theme', function (evento) {
+    evento.preventDefault();
+
+    var $botao = $(this);
+    var $body = $('body');
+    var temaAnterior = $body.hasClass('theme-dark');
+    var novoTema = !temaAnterior;
+    var urlBase = window.GLOBAL_URL || $('#URL').val() || '';
+
+    $body.toggleClass('theme-dark', novoTema);
+    atualizarBotaoTema(novoTema);
+    $botao.prop('disabled', true);
+
+    $.ajax({
+        url: urlBase + 'Loginadm/toggleDarkTheme',
+        type: 'POST',
+        dataType: 'json',
+        data: { darkTheme: novoTema ? 1 : 0 }
+    }).done(function (resposta) {
+        if (!resposta || resposta.erro) {
+            $body.toggleClass('theme-dark', temaAnterior);
+            atualizarBotaoTema(temaAnterior);
+            BootstrapDialog.alert({
+                cssClass: 'sm-dialog',
+                type: BootstrapDialog.TYPE_DANGER,
+                title: 'Tema não alterado',
+                message: (resposta && resposta.mensagem) || 'Não foi possível salvar a preferência do tema.'
+            });
+        }
+    }).fail(function (xhr) {
+        var resposta = {};
+        try {
+            resposta = JSON.parse(xhr.responseText || '{}');
+        } catch (ex) {
+            resposta = {};
+        }
+
+        $body.toggleClass('theme-dark', temaAnterior);
+        atualizarBotaoTema(temaAnterior);
+        BootstrapDialog.alert({
+            cssClass: 'sm-dialog',
+            type: BootstrapDialog.TYPE_DANGER,
+            title: 'Tema não alterado',
+            message: resposta.mensagem || 'Falha de comunicação ao salvar a preferência do tema.'
+        });
+    }).always(function () {
+        $botao.prop('disabled', false);
+    });
+});
+
+    
 function carregarEventosDashboard(dataIni, dataFim, seletor, callback) {
     $(seletor).load(GLOBAL_URL + 'GestaoAgenda/getEventosDashboard/' + dataIni + '/' + dataFim,
         function (response, status) {

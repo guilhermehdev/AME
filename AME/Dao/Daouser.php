@@ -50,8 +50,8 @@ class Daouser {
             $cad = 0; 
         }       
         
-        $sql = "INSERT INTO usuarios (nome, CPF, pass, cadastros, ativo, retornos, notificacao, impressos, email, dtnasc) VALUES (:NOME,:CPF,:PASS,:CAD,:ATIVO,:RET,:NOT,:IMP,:EMAIL,:NASC)";            
-        if(Maincontroller::doQuery($sql,array('NOME'=>$nome,'CPF'=>$cpf,'PASS'=>$pass,'CAD'=>$cad,'ATIVO'=>'1','RET'=>'1','NOT'=>'1','IMP'=>'1','EMAIL'=>$email,'NASC'=>$nasc))){
+        $sql = "INSERT INTO usuarios (nome, CPF, pass, cadastros, ativo, retornos, notificacao, impressos, email, dtnasc, darkTheme) VALUES (:NOME,:CPF,:PASS,:CAD,:ATIVO,:RET,:NOT,:IMP,:EMAIL,:NASC,:DARK_THEME)";            
+        if(Maincontroller::doQuery($sql,array('NOME'=>$nome,'CPF'=>$cpf,'PASS'=>$pass,'CAD'=>$cad,'ATIVO'=>'1','RET'=>'1','NOT'=>'1','IMP'=>'1','EMAIL'=>$email,'NASC'=>$nasc,'DARK_THEME'=>0))){           
            
         }        
     }     

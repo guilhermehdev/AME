@@ -53,7 +53,7 @@ class Loginadm {
                        
         if($user) {                      
             session_start();
-            $_SESSION['adm'] = array('username'=>$user['nome'],'id'=>$user['id'],'cadastros'=>$user['cadastros'],'cadpac'=>$user['cadpac'],'retornos'=>$user['retornos'],'exc_retorno'=>$user['exc_retorno'],'oci'=>$user['oci'],'notificacao'=>$user['notificacao'],'impressos'=>$user['impressos'],'perfil'=>$user['perfil']) ;         
+            $_SESSION['adm'] = array('username'=>$user['nome'],'id'=>$user['id'],'cadastros'=>$user['cadastros'],'cadpac'=>$user['cadpac'],'retornos'=>$user['retornos'],'exc_retorno'=>$user['exc_retorno'],'oci'=>$user['oci'],'notificacao'=>$user['notificacao'],'impressos'=>$user['impressos'],'perfil'=>$user['perfil'],'darkTheme'=>!empty($user['darkTheme']) ? 1 : 0) ;         
             Functions::messages("header",URL."Loginadm/adm");
                                          
         } else {  
@@ -65,6 +65,32 @@ class Loginadm {
                        
     }  
     
+    public function toggleDarkTheme() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $sessao = AppController::checkSession();
+        if (!$sessao || empty($sessao['id'])) {
+            http_response_code(401);
+            echo json_encode(array('erro' => true, 'mensagem' => 'Sessão expirada. Faça login novamente.'));
+            return;
+        }
+
+        $temaEscuro = isset($_POST['darkTheme']) && (string)$_POST['darkTheme'] === '1' ? 1 : 0;
+
+        try {
+            Maincontroller::doQuery(
+                'UPDATE usuarios SET darkTheme = :DARK_THEME WHERE id = :ID',
+                array('DARK_THEME' => $temaEscuro, 'ID' => (int)$sessao['id'])
+            );
+
+            $_SESSION['adm']['darkTheme'] = $temaEscuro;
+            echo json_encode(array('erro' => false, 'darkTheme' => $temaEscuro));
+        } catch (Exception $ex) {
+            http_response_code(500);
+            echo json_encode(array('erro' => true, 'mensagem' => 'Não foi possível salvar a preferência do tema.'));
+        }
+    }
+
     public function recuperar($param){                     
         $id = $param[2];        
         $userData = Daouser::get(null,null,$id);        
