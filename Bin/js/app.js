@@ -109,7 +109,7 @@ function carregarEventosDashboard(dataIni, dataFim, seletor, callback) {
 }
 
 function quantidadeColunasCardsDashboard() {
-    if (window.innerWidth >= 992) return 3;
+    if (window.innerWidth >= 992) return 4;
     if (window.innerWidth >= 768) return 2;
     return 1;
 }

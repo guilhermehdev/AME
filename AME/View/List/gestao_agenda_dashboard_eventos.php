@@ -47,8 +47,8 @@ foreach ($grupos as $grupo) {
         5 => 'Mai', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
         9 => 'Set', 10 => 'Out', 11 => 'Nov', 12 => 'Dez'
     );
-    $tagsPreview = '';
-    $tagsPreviewUsadas = array();
+    $tagsPorMes = array();
+    $ordemMesesPreview = array();
     $totalEventosGrupo = 0;
     foreach ($grupo['datas'] as $eventosDaDataGrupo) {
         $totalEventosGrupo += count($eventosDaDataGrupo);
@@ -61,17 +61,39 @@ foreach ($grupos as $grupo) {
             $mesNome = isset($mesesPreview[$mesNumero])
                 ? $mesesPreview[$mesNumero]
                 : 'Mês não informado';
-            $chaveTag = $mesNumero . '|' . $chaveTipo;
 
-            if (!isset($tagsPreviewUsadas[$chaveTag])) {
-                $tagsPreviewUsadas[$chaveTag] = true;
-                $tagsPreview .= '<span class="label label-mes-dashboard">'
-                    . $mesNome . '</span> '
-                    . '<span class="label label-' . $tipoPreview[1] . '">'
-                    . htmlspecialchars($tipoPreview[0], ENT_QUOTES, 'UTF-8') . '</span> ';
+            if (!isset($tagsPorMes[$mesNumero])) {
+                $tagsPorMes[$mesNumero] = array(
+                    'nome' => $mesNome,
+                    'tipos' => array()
+                );
+                $ordemMesesPreview[] = $mesNumero;
+            }
+
+            if (!isset($tagsPorMes[$mesNumero]['tipos'][$chaveTipo])) {
+                $tagsPorMes[$mesNumero]['tipos'][$chaveTipo] = array(
+                    'classe' => $tipoPreview[1],
+                    'nome' => $tipoPreview[0]
+                );
             }
         }
     }
+
+    $tagsPreview = '';
+    foreach ($ordemMesesPreview as $mesNumero) {
+        $mesGrupo = $tagsPorMes[$mesNumero];
+        $tagsPreview .= '<div class="dashboard-evento-card-preview-linha">'
+            . '<span class="label label-mes-dashboard">'
+            . htmlspecialchars($mesGrupo['nome'], ENT_QUOTES, 'UTF-8') . '</span> ';
+
+        foreach ($mesGrupo['tipos'] as $tipoGrupo) {
+            $tagsPreview .= '<span class="label label-' . $tipoGrupo['classe'] . '">'
+                . htmlspecialchars($tipoGrupo['nome'], ENT_QUOTES, 'UTF-8') . '</span> ';
+        }
+
+        $tagsPreview .= '</div>';
+    }
+
     $eventosAdicionais = max(0, $totalEventosGrupo - 1);
     $preview = '<div class="dashboard-evento-card-preview">'
         . $tagsPreview
@@ -108,7 +130,7 @@ foreach ($grupos as $grupo) {
             </div>';
     }
 
-    $cardsDashboard[] = '<div class="col-sm-6 col-md-4">
+    $cardsDashboard[] = '<div class="col-sm-6 col-md-3">
         <div class="panel panel-default dashboard-evento-card" data-profissional-especialidade="' . $titulo . '" data-id-servidor="' . $grupo['id_servidor'] . '" data-id-espec="' . $grupo['id_espec'] . '" data-total-ocorrencias="' . $totalEventosGrupo . '" style="border:1px solid #ccc;">
             <div class="panel-heading" style="padding:8px 12px; color:#337ab7; font-weight:bold;">
                 <span style="font-size:11px;">' . $titulo . '</span>
@@ -126,7 +148,7 @@ foreach ($grupos as $grupo) {
 
 // Mantém uma estrutura de colunas desde o HTML inicial. Assim, a expansão de
 // um card não altera a posição dos cards que estão na coluna ao lado.
-$quantidadeColunasDashboard = 3;
+$quantidadeColunasDashboard = 4;
 for ($coluna = 0; $coluna < $quantidadeColunasDashboard; $coluna++) {
     echo '<div class="dashboard-eventos-coluna">';
     for ($indiceCard = $coluna; $indiceCard < count($cardsDashboard); $indiceCard += $quantidadeColunasDashboard) {
