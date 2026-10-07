@@ -17,7 +17,6 @@ echo
              <a href=\"{$arquivo}Ressonancia.pdf\"  target=\"_blank\" ><span class=\"glyphicon glyphicon-new-window\" aria-hidden=\"true\"></span> Ressonância magnética</a><br> 
              <a href=\"{$arquivo}InterconsultaFono.pdf\"  target=\"_blank\" ><span class=\"glyphicon glyphicon-new-window\" aria-hidden=\"true\"></span> Ficha de intersonsulta Fonoaudiologia</a><br> 
              <a href=\"{$arquivo}TermoRiscosIdadeFertil.pdf\"  target=\"_blank\" ><span class=\"glyphicon glyphicon-new-window\" aria-hidden=\"true\"></span> Termo de conhecimento para mulheres em idade fértil</a><br> 
+             <a href=\"{$arquivo}Extra.pdf\"  target=\"_blank\" ><span class=\"glyphicon glyphicon-new-window\" aria-hidden=\"true\"></span> Folha de extra</a><br> 
     </div>
-     
-
 </div>";

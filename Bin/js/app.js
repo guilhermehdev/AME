@@ -2131,7 +2131,7 @@ $(document).on('click', '#btn-submit-usuario, #btn-update-usuario', function () 
         messagesHandler('{"action":"modal","content":"Verificar campo <strong>CPF </strong><br>Não pode ser vazio.","typemsg":"danger"}');
         return;
         
-    } else if ($('#inp-nasc-usuario').val().length < 11) {
+    } else if (!validateData($('#inp-nasc-usuario').val(), 'BR', 'EN')) {
         messagesHandler('{"action":"modal","content":"Verificar campo <strong>Nascimento </strong><br>Não pode ser vazio.","typemsg":"danger"}');
         return;
 
