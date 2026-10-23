@@ -284,7 +284,10 @@ class DaoGestaoAgenda {
                 INNER JOIN especs e ON e.id = am.id_espec
                 WHERE (ae.data_evento BETWEEN :DATAINI AND :DATAFIM";
         if ($incluirFixos) {
-            $sql .= " OR (ae.show_dashboard = 1";
+            // Eventos fixados no painel continuam visíveis somente até a data
+            // da ocorrência. A partir do dia seguinte, permanecem apenas no
+            // Histórico / Eventos.
+            $sql .= " OR (ae.show_dashboard = 1 AND ae.data_evento >= :DATAFIXOINI";
             if ($excluirFixosIni && $excluirFixosFim) {
                 $sql .= " AND NOT (ae.data_evento BETWEEN :EXCLUIRFIXOSINI AND :EXCLUIRFIXOSFIM)";
             }
@@ -293,6 +296,9 @@ class DaoGestaoAgenda {
         $sql .= ")
                 ORDER BY ae.data_evento ASC, e.especialidade, s.nome";
         $params = ['DATAINI' => $dataIni, 'DATAFIM' => $dataFim];
+        if ($incluirFixos) {
+            $params['DATAFIXOINI'] = $dataIni;
+        }
         if ($incluirFixos && $excluirFixosIni && $excluirFixosFim) {
             $params['EXCLUIRFIXOSINI'] = $excluirFixosIni;
             $params['EXCLUIRFIXOSFIM'] = $excluirFixosFim;

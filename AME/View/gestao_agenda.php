@@ -86,7 +86,7 @@ echo "              </select>
                     <div class=\"col-sm-6 mrg-bottom\">
                         <label>Ano</label>
                         <select class=\"select\" id=\"slct-ano-reg\" name=\"slct-ano-reg\">";
-                        for ($y = $anoAtual; $y >= $anoAtual - 3; $y--) {
+                        for ($y = $anoAtual + 1; $y >= $anoAtual - 3; $y--) {
                             $sel = $y == $anoAtual ? 'selected' : '';
                             echo "<option value=\"{$y}\" {$sel}>{$y}</option>";
                         }
