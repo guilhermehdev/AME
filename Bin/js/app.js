@@ -2061,12 +2061,26 @@ $(document).on('click', '#btn-submit-paciente-modal', function () {
             type: 'GET',
             url: GLOBAL_URL + url + eachParams(params),
             success: function (result) {
+                if ($('#btn-add-oci').length) {
+                    try {
+                        var resposta = typeof result === 'string' ? JSON.parse(result) : result;
+                        var paciente = resposta && resposta.success ? resposta.paciente : null;
+
+                        if (paciente) {
+                            $('#inp-id').val(paciente.id || '');
+                            $('#inp-nome').val(paciente.nome || '');
+                            $('#inp-cad-dtnasc').val(
+                                validateData(paciente.dtnasc, 'EN', 'BR') || paciente.dtnasc || ''
+                            );
+                        }
+                    } catch (e) {
+                        console.error('Não foi possível carregar o paciente recém-cadastrado na OCI.', e);
+                    }
+                }
                 closeModal();
             },
         }).done(function () {
             messagesHandler('{"action":"modal","content":"Salvo com sucesso!","typemsg":"success"}');
-            $('#inp-nome').val('');
-            $('#inp-cad-dtnasc').val('');    
             $('#inp-cad-dtnasc-modal').val('');
             $('#inp-nome-modal').val('');
             $('#inp-cpf-modal').val('');

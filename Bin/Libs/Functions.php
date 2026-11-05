@@ -115,6 +115,16 @@ class Functions {
         return $textoM;
     }
 
+    /**
+     * Remove espaços excedentes, mantendo somente um espaço entre as palavras.
+     */
+    public static function normalizeSpaces($texto){
+        $texto = trim((string)$texto);
+        $normalizado = preg_replace('/\s+/u', ' ', $texto);
+
+        return $normalizado === null ? $texto : $normalizado;
+    }
+
     public function saveBRcurrencyFormat($valor) {
         $source = array('.', ',', ' '); 
         $replace = array('', '.', '');

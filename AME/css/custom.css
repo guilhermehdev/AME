@@ -611,3 +611,14 @@ body.theme-dark .dashboard-evento-card .dashboard-evento-reagendamento,
 body.theme-dark .dashboard-evento-card .text-muted {
     color: #8fc7ff !important;
 }
+
+/* A caixa de mensagens mantém fundo claro no tema escuro; o conteúdo precisa
+   usar uma cor escura para permanecer legível. */
+body.theme-dark #alertas-ocorrencias-hoje .alerta-ocorrencia-item {
+    color: #263238 !important;
+}
+
+body.theme-dark #alertas-ocorrencias-hoje .alerta-ocorrencia-item .close {
+    color: #263238 !important;
+    opacity: .65;
+}

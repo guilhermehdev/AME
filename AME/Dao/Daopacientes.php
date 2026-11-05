@@ -13,7 +13,9 @@ class Daopacientes {
             throw new Exception('Parâmetros obrigatórios não informados.');
         }
              
-        $nome = Functions::cleanString(Functions::uppercase(trim($params[2])));
+        $nome = Functions::cleanString(
+            Functions::normalizeSpaces(Functions::uppercase($params[2]))
+        );
         $dtnasc = $params[3];
         $cpf = isset($params[4]) ? Functions::cleanString($params[4]) : null;
         if ($cpf != null && $cpf != '') {
@@ -24,7 +26,9 @@ class Daopacientes {
          
         $pront = (Functions::cleanString($params[5] != "")) ? Functions::cleanString($params[5]) : "";
         $tel = isset($params[6]) ? Functions::cleanString($params[6]) : null;
-        $mae = isset($params[7]) ? Functions::cleanString(Functions::uppercase(trim($params[7]))) : "";                  
+        $mae = isset($params[7]) ? Functions::cleanString(
+            Functions::normalizeSpaces(Functions::uppercase($params[7]))
+        ) : "";
         $idLogra = isset($params[8]) ? Functions::cleanString($params[8]): null;
         $numero = isset($params[9]) ? Functions::cleanString($params[9]): "";
         $complemento = isset($params[10]) ? Functions::cleanString($params[10]): "";
@@ -38,8 +42,25 @@ class Daopacientes {
              $complemento = null;
         }         
         
-        $sql = "INSERT INTO pacientes (nome,dtnasc,pront,tel,cpf,mae,id_logradouro,numero,complemento,sexo) VALUES (:NOME,:DTNASC,:PRONT,:TEL,:CPF,:MAE,:IDLOGRA,:NUMERO,:COMP,:SEXO)";            
-       Maincontroller::doQuery($sql,array('NOME'=>$nome,'DTNASC'=>Functions::ENdateFormat($dtnasc),'PRONT'=>$pront,'TEL'=>$tel,'CPF'=>$cpf_clean,'MAE'=>$mae,'IDLOGRA'=>$idLogra,'NUMERO'=>$numero,'COMP'=>$complemento,'SEXO'=>$sexo));      
+        $sql = "INSERT INTO pacientes (nome,dtnasc,pront,tel,cpf,mae,id_logradouro,numero,complemento,sexo) VALUES (:NOME,:DTNASC,:PRONT,:TEL,:CPF,:MAE,:IDLOGRA,:NUMERO,:COMP,:SEXO)";
+        $salvo = Maincontroller::doQuery($sql,array('NOME'=>$nome,'DTNASC'=>Functions::ENdateFormat($dtnasc),'PRONT'=>$pront,'TEL'=>$tel,'CPF'=>$cpf_clean,'MAE'=>$mae,'IDLOGRA'=>$idLogra,'NUMERO'=>$numero,'COMP'=>$complemento,'SEXO'=>$sexo));
+
+        header('Content-Type: application/json; charset=utf-8');
+        if ($salvo !== false) {
+            echo json_encode(array(
+                'success' => true,
+                'paciente' => array(
+                    'id' => (int)Conn::getConn()->lastInsertId(),
+                    'nome' => $nome,
+                    'dtnasc' => $dtnasc
+                )
+            ), JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode(array(
+                'success' => false,
+                'mensagem' => 'Não foi possível salvar o paciente.'
+            ), JSON_UNESCAPED_UNICODE);
+        }
     } 
     
     public function update($params) {
@@ -48,7 +69,9 @@ class Daopacientes {
         }
                        
         $id = $params[2];   
-        $nome = isset($params[3]) ? Functions::cleanString(Functions::uppercase(trim($params[3]))) : null;        
+        $nome = isset($params[3]) ? Functions::cleanString(
+            Functions::normalizeSpaces(Functions::uppercase($params[3]))
+        ) : null;
         $dtnasc = isset($params[4]) ? $params[4] : null;  
         $cpf = isset($params[5]) ? Functions::cleanString($params[5]) : null;
         if ($cpf != null && $cpf != '') {
@@ -58,7 +81,9 @@ class Daopacientes {
         }
         $pront =  (Functions::cleanString($params[6] != "")) ? Functions::cleanString($params[6]) : "";
         $tel = isset($params[7]) ? Functions::cleanString($params[7]) : null;
-        $mae = isset($params[8]) ? Functions::cleanString(Functions::uppercase(trim($params[8]))) : null;                  
+        $mae = isset($params[8]) ? Functions::cleanString(
+            Functions::normalizeSpaces(Functions::uppercase($params[8]))
+        ) : null;
         $idLogra = isset($params[9]) ? Functions::cleanString($params[9]): null;
         $numero = isset($params[10]) ? Functions::cleanString($params[10]): "";
         $complemento = isset($params[11]) ? Functions::cleanString($params[11]): "";
